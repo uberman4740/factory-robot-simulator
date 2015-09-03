@@ -138,12 +138,12 @@ MonoBehaviour:
   - {fileID: 186361215}
   distinctObjectStartIndices: 0200000004000000
   pSelectObject: .300000012
-  agentRange: {x: 0, y: 0, z: 0}
+  agentRange: {x: 38, y: 0, z: 38}
   buildingSize: {x: 40, y: 8, z: 40}
   relativeAngleRange: 80
   relativeDistanceMin: .5
   relativeDistanceMax: 8
-  switchPeriod: .200000003
+  switchPeriod: .00100000005
   trainingFilePath: E:\\_NEW\\FactoryRobotSim-Data\\LabeledData\\
   labelFileName: labels.dat
   captureFilePrefix: capture
@@ -2789,6 +2789,10 @@ Prefab:
     - target: {fileID: 100000, guid: e2e69610d7d534141bebb6e4423fd264, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: e2e69610d7d534141bebb6e4423fd264, type: 3}
+      propertyPath: m_TagString
+      value: Building
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e2e69610d7d534141bebb6e4423fd264, type: 3}
