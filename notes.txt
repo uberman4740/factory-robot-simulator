@@ -1,0 +1,8 @@
+--- Labeled data generation ---  
+. Currently, the distribution of the images used for the labeling exercise is quite different than the natural distribution in the game mode.
+  Possible advantages: Dense information (e.g. higher fraction of images with humans close to camera)
+  Possible drawbacks: The opportunity to "overfit" to the actual situation is wasted.
+
+. The labelling task is impossible in case an object completely conceals another. 
+  One solution would be to improve the labeling such that it only counts an object
+  if it is definitely visible.
