@@ -60,7 +60,7 @@ public class LabeledDataCreator : MonoBehaviour {
 
     /** Compute the fractional signal due to the distnace from the sensor */
     private static float GetDistanceDiscount(float distance, float minDistance) {
-        return 1.0f / (distance - minDistance + 1.0f);
+        return Mathf.Min(1.0f, 1.0f / (distance - minDistance + 1.0f));
     }
 
     /** Set objects' positions randomly and save a snapshot + label */
@@ -71,7 +71,7 @@ public class LabeledDataCreator : MonoBehaviour {
 
         agent.transform.eulerAngles = new Vector3(0, Random.Range(0.0f, 360.0f), 0);
 
-        float[] sensorSignals = new float[nDirectionSensorsPerCategory * (distinctObjectStartIndices.Length + 1)];
+        float[] sensorSignals = new float[nDirectionSensorsPerCategory * (distinctObjectStartIndices.Length + 2)];
         int j = 0;
         for (int i = 0; i < classificationObjects.Length; i++) {
             Transform obj = classificationObjects[i];
@@ -121,6 +121,16 @@ public class LabeledDataCreator : MonoBehaviour {
             }
         }
 
+        for (int z = 0; z < nDirectionSensorsPerCategory; z++) {
+            float sensorAngle = sensorsDeltaAngle * (z - (nDirectionSensorsPerCategory/2.0f - 0.5f));
+            float distance = GetWallDistance(agent.transform, sensorAngle);
+
+            
+            float distanceSignal = GetDistanceDiscount(distance, relativeDistanceMin);
+            //Debug.LogFormat("z: {0}, distanceSignal: {1}", z, distanceSignal);
+            sensorSignals[z + nDirectionSensorsPerCategory * (distinctObjectStartIndices.Length + 1)] = distanceSignal;
+        }
+
         string labelVector = "";
         foreach (float a in sensorSignals) {
             labelVector += a.ToString();
@@ -150,6 +160,26 @@ public class LabeledDataCreator : MonoBehaviour {
         }
     }
 
+
+    private float GetWallDistance(Transform t, float sensorAngle) {
+        RaycastHit[] hits;
+
+        t.Rotate(new Vector3(0, sensorAngle, 0));
+        Vector3 direction = t.forward;     
+        hits = Physics.RaycastAll(t.position, direction);
+        t.Rotate(new Vector3(0, -sensorAngle, 0));
+
+        float distance = float.PositiveInfinity;
+        foreach (var hit in hits) {
+            if (hit.transform.root.tag.Equals("Building")) {
+                distance = hit.distance;
+            }
+        }
+        if (distance == float.PositiveInfinity) {
+            Debug.LogWarning("No wall was being hit!");
+        }
+        return distance;
+    }
 
     private void SetRandomTarget(Transform t) {
         AICharacterControl ctrl = t.GetComponent<AICharacterControl>();
