@@ -28,3 +28,6 @@ TrainingData/
 
 # IPython binary
 *.pyc
+
+exp0*/
+network3.py
