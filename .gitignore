@@ -19,3 +19,12 @@
 
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
+
+# Binary training data
+TrainingData/
+
+# IPython notebook checkpoint files
+.ipynb_checkpoints
+
+# IPython binary
+*.pyc
