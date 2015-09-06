@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityStandardAssets.Characters.ThirdPerson;
 
+
 public class LabeledDataCreator : MonoBehaviour {
     public RenderTexture cameraRenderTexture;
     private Texture2D readerTexture;
@@ -10,8 +11,7 @@ public class LabeledDataCreator : MonoBehaviour {
     public GameObject agent;
 
     public Transform[] classificationObjects;
-
-    public int[] distinctObjectStartIndices; // if you have classificationObjects = [A, A, A, B, C, C, D, D], this should be [3, 4, 6].
+    public string[] recordCategoryTags;
 
     // Probability with which each object is chosen to be displayed in a given capture
     public float pSelectObject = 0.3f;
@@ -23,22 +23,16 @@ public class LabeledDataCreator : MonoBehaviour {
     public float relativeDistanceMin = 1.0f;
     public float relativeDistanceMax = 10.0f;
 
+    public int nCaptures = 50000;
     private int counter = 0;
-
-    public float switchPeriod = 0.2f;
 
     public string trainingFilePath;
     public string labelFileName = "labels.dat";
     public string captureFilePrefix = "capture";
 
-    public int nDirectionSensorsPerCategory = 5;
-    public float sensorsDeltaAngle = 10.0f;
+    public int nDirectionSensors = 5;
 
-    /** Determines from what angle onwards objects are no longer counted toward label */
-    public float cameraAngle = 70.0f;
-
-    /** To what fraction of the maximum should the signal decay one delta-angle next to center */
-    public float angularSignalDecay = 0.5f;
+    public string wallTag = "Building";
 
     /** Initializiation */
     void Start() {
@@ -46,9 +40,36 @@ public class LabeledDataCreator : MonoBehaviour {
         readerTexture = new Texture2D(cameraRenderTexture.width,
                                       cameraRenderTexture.height);
 
-        InvokeRepeating("Snapshot", 0.01f, switchPeriod);
+        //InvokeRepeating("Snapshot", 0.01f, switchPeriod);
 
+
+        FileUtils.CopyFile(trainingFilePath + labelFileName, trainingFilePath + labelFileName + "_backup");
         FileUtils.WriteStringToFile(trainingFilePath + labelFileName, "");
+
+
+        
+        //Camera.main.enabled = false;
+
+       
+    }
+
+    void Update() {
+        if (counter < nCaptures) {
+            Snapshot();
+        }
+
+
+
+        //if (Input.GetKeyDown(KeyCode.Space)) {
+        //    float[] labelInfo = GetSensorInfo();
+        //    for (int c = 0; c < recordCategoryTags.Length; c++) {
+        //        string l = recordCategoryTags[c] + ": ";
+        //        for (int s = 0; s < nDirectionSensors; s++) {
+        //            l += labelInfo[c * nDirectionSensors + s] + "  ";
+        //        }
+        //        Debug.Log(l);
+        //    }
+        //}
     }
 
     /** Compute the fractional signal a sensor perceives, given its relative angle
@@ -63,16 +84,14 @@ public class LabeledDataCreator : MonoBehaviour {
         return Mathf.Min(1.0f, 1.0f / (distance - minDistance + 1.0f));
     }
 
-    /** Set objects' positions randomly and save a snapshot + label */
-    void Snapshot() {
+
+    private void SetRandomPositions() {
         agent.transform.position = MathUtils.getUniformRandomVector3(
             new Vector3(0, agent.transform.position.y, 0),
             agentRange);
 
         agent.transform.eulerAngles = new Vector3(0, Random.Range(0.0f, 360.0f), 0);
 
-        float[] sensorSignals = new float[nDirectionSensorsPerCategory * (distinctObjectStartIndices.Length + 2)];
-        int j = 0;
         for (int i = 0; i < classificationObjects.Length; i++) {
             Transform obj = classificationObjects[i];
 
@@ -82,64 +101,122 @@ public class LabeledDataCreator : MonoBehaviour {
                 obj.gameObject.SetActive(true);
             }
 
-            
-                
             float relativeAngle = Random.Range(-relativeAngleRange / 2.0f, relativeAngleRange / 2.0f);
-            float distance = Random.Range(relativeDistanceMin, relativeDistanceMax);      
+            float distance = Random.Range(relativeDistanceMin, relativeDistanceMax);
             float angle = relativeAngle + agent.transform.eulerAngles.y;
 
-            SetRandomTarget(classificationObjects[i]);
+            SetRandomNavigationTarget(classificationObjects[i]);
 
-            //Debug.Log("agent angle " + agent.transform.eulerAngles.y);
             float objY = 0.0f;
             obj.position = agent.transform.position + distance * new Vector3(Mathf.Sin(Mathf.Deg2Rad * angle), objY, Mathf.Cos(Mathf.Deg2Rad * angle));
 
-
             obj.eulerAngles = new Vector3(0.0f, Random.Range(0.0f, 360.0f), 0.0f);
-
-            // labels
-            if ((j < distinctObjectStartIndices.Length) &&
-                (distinctObjectStartIndices[j] == i)) {
-                j++;
-            }
-
-            // Range check.
-            if (obj.gameObject.activeSelf
-                    && obj.position.x < buildingSize.x / 2
-                    && obj.position.x > -buildingSize.x / 2
-                    && obj.position.z < buildingSize.z / 2
-                    && obj.position.z > -buildingSize.z / 2
-                    && relativeAngle > -cameraAngle/2
-                    && relativeAngle < cameraAngle/2) {
-
-                for (int z = 0; z < nDirectionSensorsPerCategory; z++) {
-                    float sensorAngle = sensorsDeltaAngle * (z - (nDirectionSensorsPerCategory/2.0f - 0.5f));               
-                    float signal = GetSignalFraction(relativeAngle, sensorAngle, angularSignalDecay, sensorsDeltaAngle);
-                    signal = signal * GetDistanceDiscount(distance, relativeDistanceMin);
-                    sensorSignals[nDirectionSensorsPerCategory * j + z] += signal;
-                }
-            }
         }
+    }
 
-        for (int z = 0; z < nDirectionSensorsPerCategory; z++) {
-            float sensorAngle = sensorsDeltaAngle * (z - (nDirectionSensorsPerCategory/2.0f - 0.5f));
-            float distance = GetWallDistance(agent.transform, sensorAngle);
+    private float[] GetSensorInfo() {
+        //if (obj.gameObject.activeSelf) {
+
+        //    for (int z = 0; z < nDirectionSensorsPerCategory; z++) {
+        //        float sensorAngle = sensorsDeltaAngle * (z - (nDirectionSensorsPerCategory / 2.0f - 0.5f));
+        //        float signal = GetSignalFraction(relativeAngle, sensorAngle, angularSignalDecay, sensorsDeltaAngle);
+        //        signal = signal * GetDistanceDiscount(distance, relativeDistanceMin);
+        //        sensorSignals[nDirectionSensorsPerCategory * j + z] += signal;
+        //    }
+        //}
+
+        int camWidth = agentCamera.pixelWidth;
+        int nCategories = recordCategoryTags.Length;
+        float[] signals = new float[nDirectionSensors*nCategories];
+
+
+        //float[,] uncompressedSignals = new float[nCategories, camWidth];
+
+
+        float alpha = Mathf.Deg2Rad * agentCamera.transform.eulerAngles.x;
+        float beta = 0.5f * Mathf.Deg2Rad * agentCamera.fieldOfView;
+        int horizonY = Mathf.RoundToInt(agentCamera.pixelHeight * (0.5f + (Mathf.Tan(alpha) / (2.0f * Mathf.Tan(beta)))));
+
+        int pixelsPerDirectionSensor = camWidth / nDirectionSensors;
+        float pixelContribution = 1.0f / pixelsPerDirectionSensor;
+
+        int nHorizontalPixels = camWidth - (camWidth % pixelsPerDirectionSensor);
+        
+        string log = "";
+        for (int x = 0; x < nHorizontalPixels; x++) {
+            Ray ray = agentCamera.ScreenPointToRay(new Vector3(x, horizonY, 0));
 
             
-            float distanceSignal = GetDistanceDiscount(distance, relativeDistanceMin);
-            //Debug.LogFormat("z: {0}, distanceSignal: {1}", z, distanceSignal);
-            sensorSignals[z + nDirectionSensorsPerCategory * (distinctObjectStartIndices.Length + 1)] = distanceSignal;
+            RaycastHit[] castResult = Physics.RaycastAll(ray);
+            
+            
+            if (castResult.Length != 0) {
+                RaycastHit closestHit = GetClosestHit(castResult);
+                RaycastHit wallHit = GetHitByTag(castResult, wallTag);
+                int index = MiscUtils.IndexOf(recordCategoryTags, closestHit.transform.tag);
+                int wallIndex = MiscUtils.IndexOf(recordCategoryTags, wallTag);
+                if (index == -1) {
+                    Debug.LogWarning("RayCast found unlisted object.");
+                } else {
+                    //uncompressedSignals[index, x] = 1.0f;
+
+                    log += Mathf.RoundToInt(closestHit.distance) + ";";
+
+                    if (!closestHit.transform.tag.Equals(wallTag)) {
+                        signals[index * nDirectionSensors + (x / pixelsPerDirectionSensor)] += pixelContribution;
+                        //Debug.DrawRay(ray.origin, 20.0f * ray.direction, Color.black, 10.0f, true);
+                    } 
+                }              
+                signals[wallIndex * nDirectionSensors + (x / pixelsPerDirectionSensor)] += pixelContribution / Mathf.Max(1.0f, 0.4f*wallHit.distance);                 
+            }            
+        }
+        return signals;
+    }
+
+    private RaycastHit GetClosestHit(RaycastHit[] castResult) {
+        if (castResult.Length == 0) {
+            throw new System.ArgumentException("castResult cannot be empty", "original");
         }
 
+        float minDistance = float.PositiveInfinity;
+        RaycastHit bestResult = castResult[0];
+        foreach (RaycastHit result in castResult) {
+            if (result.distance < minDistance) {
+                minDistance = result.distance;
+                bestResult = result;
+            }
+        }
+        return bestResult;
+    }
+
+    private RaycastHit GetHitByTag(RaycastHit[] castResult, string tag) {
+        if (castResult.Length == 0) {
+            throw new System.ArgumentException("castResult cannot be empty", "original");
+        }
+
+        foreach (RaycastHit result in castResult) {
+            if (result.transform.tag.Equals(tag)) {
+                return result;
+            }
+        }
+        throw new System.ArgumentException("castResult does not contain tag", "original");
+    }
+
+    /** Set objects' positions randomly and save a snapshot + label */
+    void Snapshot() {
+        SetRandomPositions();
+
+        agentCamera.Render();
+
+        float[] sensorData = GetSensorInfo();
+
         string labelVector = "";
-        foreach (float a in sensorSignals) {
+        foreach (float a in sensorData) {
             labelVector += a.ToString();
             labelVector += ",";
         }
         //Debug.Log(labelVector);
 
-
-        agentCamera.Render();
         Color32[] currentImage = MiscUtils.getCurrentCameraImage(cameraRenderTexture, readerTexture);
 
         int downsampleFactor = 2;
@@ -152,7 +229,7 @@ public class LabeledDataCreator : MonoBehaviour {
 
         string trainingLine = labelVector + "\n";
         FileUtils.AppendStringToFile(trainingFilePath + labelFileName, trainingLine);
-
+        
         counter++;
 
         if (counter % 1000 == 0) {
@@ -181,7 +258,7 @@ public class LabeledDataCreator : MonoBehaviour {
         return distance;
     }
 
-    private void SetRandomTarget(Transform t) {
+    private void SetRandomNavigationTarget(Transform t) {
         AICharacterControl ctrl = t.GetComponent<AICharacterControl>();
         if (ctrl == null) {
             return;

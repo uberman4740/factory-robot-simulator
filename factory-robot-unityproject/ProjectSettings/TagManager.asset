@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Building
+  - Pickup
+  - Humanoid
+  - Terminal
   layers:
   - Default
   - TransparentFX

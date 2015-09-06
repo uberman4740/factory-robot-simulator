@@ -12,4 +12,13 @@ public static class MiscUtils {
         readerTexture.Apply();
         return readerTexture.GetPixels32();
     }
+
+    public static int IndexOf(object[] arr, object comp) {
+        for (int i = 0; i < arr.Length; i++) {
+            if (arr[i].Equals(comp)) {
+                return i;
+            }
+        }
+        return -1;
+    }
 }

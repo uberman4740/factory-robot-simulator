@@ -136,14 +136,13 @@ MonoBehaviour:
   - {fileID: 1998113436}
   - {fileID: 570332081}
   - {fileID: 186361215}
-  distinctObjectStartIndices: 0200000004000000
   pSelectObject: .300000012
   agentRange: {x: 38, y: 0, z: 38}
   buildingSize: {x: 40, y: 8, z: 40}
   relativeAngleRange: 80
   relativeDistanceMin: .5
   relativeDistanceMax: 8
-  switchPeriod: .00100000005
+  switchPeriod: 4.99999987e-05
   trainingFilePath: E:\\_NEW\\FactoryRobotSim-Data\\LabeledData\\
   labelFileName: labels.dat
   captureFilePrefix: capture
@@ -637,7 +636,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 436670, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 1
+      value: .879999995
       objectReference: {fileID: 0}
     - target: {fileID: 436670, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalPosition.y
@@ -645,7 +644,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 436670, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalPosition.z
-      value: -5.44999981
+      value: -2.86999989
       objectReference: {fileID: 0}
     - target: {fileID: 436670, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalRotation.x
@@ -667,33 +666,25 @@ Prefab:
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 113348, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
-      propertyPath: m_Name
-      value: Human1
-      objectReference: {fileID: 0}
     - target: {fileID: 454696, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalRotation.x
-      value: .532675207
+      value: .532675147
       objectReference: {fileID: 0}
     - target: {fileID: 454696, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalRotation.y
-      value: .0703404546
+      value: .0703404471
       objectReference: {fileID: 0}
     - target: {fileID: 454696, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalRotation.z
-      value: .836132765
+      value: .836132646
       objectReference: {fileID: 0}
     - target: {fileID: 454696, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
       propertyPath: m_LocalRotation.w
-      value: -.110415146
+      value: -.110415131
       objectReference: {fileID: 0}
-    - target: {fileID: 11402594, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
-      propertyPath: target
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 19597056, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
-      propertyPath: m_StoppingDistance
-      value: 1
+    - target: {fileID: 113348, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
+      propertyPath: m_Name
+      value: Human1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 54eb5844754051b40a918a84c33b7c1a, type: 2}
@@ -1569,7 +1560,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 477506, guid: 26751973be03281429815276434bf0c5, type: 2}
       propertyPath: m_RootOrder
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 139986, guid: 26751973be03281429815276434bf0c5, type: 2}
       propertyPath: m_StaticEditorFlags
@@ -3103,7 +3094,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 4.79610872
+      value: .790000021
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.y
@@ -3131,7 +3122,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_RootOrder
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 135356, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_Name
@@ -3467,23 +3458,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 477506, guid: 26751973be03281429815276434bf0c5, type: 2}
       propertyPath: m_RootOrder
-      value: 0
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 156822, guid: 26751973be03281429815276434bf0c5, type: 2}
       propertyPath: m_Name
       value: Terminal2
-      objectReference: {fileID: 0}
-    - target: {fileID: 139986, guid: 26751973be03281429815276434bf0c5, type: 2}
-      propertyPath: m_StaticEditorFlags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 150984, guid: 26751973be03281429815276434bf0c5, type: 2}
-      propertyPath: m_StaticEditorFlags
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 156822, guid: 26751973be03281429815276434bf0c5, type: 2}
-      propertyPath: m_StaticEditorFlags
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 26751973be03281429815276434bf0c5, type: 2}

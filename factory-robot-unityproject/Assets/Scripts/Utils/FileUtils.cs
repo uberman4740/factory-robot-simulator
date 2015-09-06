@@ -25,4 +25,9 @@ public static class FileUtils {
         System.IO.File.AppendAllText(fileName, content);
     }
 
+    public static void CopyFile(string from, string to) {
+        if (System.IO.File.Exists(from)) {
+            System.IO.File.Copy(from, to, true);
+        }
+    }
 }
