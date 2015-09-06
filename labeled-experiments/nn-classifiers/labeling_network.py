@@ -146,14 +146,24 @@ class Network(object):
         self.params = [param for layer in self.layers for param in layer.params]
         self.x = T.matrix("x")
         self.y = T.matrix("y")
+        self.x_single = T.vector("x_single")
         init_layer = self.layers[0]
         init_layer.set_inpt(self.x, self.x, self.mini_batch_size)
+        init_layer.set_single_inpt(self.x_single)
+
         for j in xrange(1, len(self.layers)):
             prev_layer, layer = self.layers[j - 1], self.layers[j]
             layer.set_inpt(
                 prev_layer.output, prev_layer.output_dropout, self.mini_batch_size)
+            layer.set_single_inpt(
+                prev_layer.single_output)
+            
         self.output = self.layers[-1].output
         self.output_dropout = self.layers[-1].output_dropout
+        self.single_output = self.layers[-1].single_output
+
+    def get_single_output(self, input_to_classify):
+        return self.single_output.eval({self.x_single: input_to_classify})
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
             validation_data, test_data, lmbda=0.0):
@@ -300,6 +310,17 @@ class ConvPoolLayer(object):
             pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
         self.output_dropout = self.output  # no dropout in the convolutional layers
 
+    def set_single_inpt(self, inpt):
+        single_image_shape = (1, self.image_shape[1], self.image_shape[2], self.image_shape[3])
+        self.single_inpt = inpt.reshape(single_image_shape)
+        conv_out = conv.conv2d(
+            input=self.single_inpt, filters=self.w, filter_shape=self.filter_shape,
+            image_shape=single_image_shape)
+        pooled_out = downsample.max_pool_2d(
+            input=conv_out, ds=self.poolsize, ignore_border=True)
+        self.single_output = self.activation_fn(
+            pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+
 
 class FullyConnectedLayer(object):
     def __init__(self, n_in, n_out, activation_fn=sigmoid, p_dropout=0.0):
@@ -310,13 +331,18 @@ class FullyConnectedLayer(object):
         # Initialize weights and biases
         self.w = theano.shared(
             np.asarray(
-                np.random.normal(
-                    loc=0.0, scale=np.sqrt(1.0 / n_out), size=(n_in, n_out)),
+                # np.random.normal(
+                #     loc=0.0, scale=np.sqrt(1.0 / n_out), size=(n_in, n_out)),
+                np.random.uniform(
+                    -np.sqrt(6.0/(n_in + n_out)), np.sqrt(6.0/(n_in + n_out)), size=(n_in, n_out)),
+                    
                 dtype=theano.config.floatX),
             name='w', borrow=True)
         self.b = theano.shared(
-            np.asarray(np.random.normal(loc=0.0, scale=1.0, size=(n_out,)),
-                       dtype=theano.config.floatX),
+            np.asarray(
+                # np.random.normal(loc=0.0, scale=1.0, size=(n_out,)),
+                 np.zeros((n_out,)),      
+                dtype=theano.config.floatX),
             name='b', borrow=True)
         self.params = [self.w, self.b]
 
@@ -329,21 +355,26 @@ class FullyConnectedLayer(object):
         self.output_dropout = self.activation_fn(
             T.dot(self.inpt_dropout, self.w) + self.b)
 
+    def set_single_inpt(self, inpt):
+        self.single_inpt = inpt.reshape((self.n_in, ))
+        self.single_output = self.activation_fn(
+            (1 - self.p_dropout) * T.dot(self.single_inpt, self.w) + self.b)
+
     def accuracy(self, y):
         "Return the accuracy for the mini-batch."
 
-        return -T.mean(abs(self.output - y) / (1.01 - abs(self.output - y)))
+        # return -T.mean(abs(self.output - y) / (1.01 - abs(self.output - y)))
         # return T.mean(T.log(1.0000001 - abs(self.output - y)))
-        # return -T.mean((self.output - y) ** 2)
+        return -T.mean((self.output - y) ** 2)
         # return -T.mean(T.ones_like(y))
 
     def cost(self, net):
         "Return the cost."
-        return T.mean(abs(self.output_dropout - net.y) / (1.01 - abs(self.output_dropout - net.y)))
+        # return T.mean(abs(self.output_dropout - net.y) / (1.01 - abs(self.output_dropout - net.y)))
 
         # return -T.mean(T.log(1.0000001 - abs(self.output_dropout - net.y)))
 
-        # return T.mean((self.output_dropout - net.y) ** 2)
+        return T.mean((self.output_dropout - net.y) ** 2)
 
         # return -T.mean( T.log(1 - abs( ) ) )
 
