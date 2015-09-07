@@ -34,59 +34,70 @@ print 'Socket bind complete'
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
+img_d = ax.imshow(np.random.uniform(0.0, 1.0, (64, 64, 3)), 
+                  interpolation='nearest')
 
-# some X and Y data
-n_bars = 5
-x = np.arange(n_bars)
-y = np.random.uniform(0, 1, n_bars)
-
-ax.set_ylim(0,1)
-ax.set_xlim(-0.5, n_bars-0.5)
-rects = ax.bar(x, y, align='center')
-
-periods = np.random.uniform(1, 3, n_bars)
-ranges = np.random.uniform(0.2,1.0, n_bars)
-
-# draw and show it
 fig.canvas.draw()
 plt.show(block=False)
 
 
-#now keep talking with the client
+fragment_pointer = -1
+n_fragments = 4*3
+receive_floats = False
+current_graph = [[]] * n_fragments
+
+
+
+def draw_image_from_string(img):
+    img_d.set_data(
+        np.asarray(
+            [np.fromstring(i, dtype=np.uint8) for i in img]).reshape((64, 64, 3)))
+    fig.canvas.draw()
+
+def draw_image_from_floats(img):
+    img_d.set_data(np.asarray(img).reshape((64, 64, 3)))
+    fig.canvas.draw()
+
+
+def is_preamble(data):
+    if len(data) < 6: 
+        return False
+    for i in range(6):
+        if ord(data[i]) != (i+1):
+            return False
+    return True
+
+
 while 1:
-    # receive data from client (data, addr)
     d = s.recvfrom(1024)
     data = d[0]
     addr = d[1]
+    print 'Message[' + addr[0] + ':' + str(addr[1]) + '] - length ' + str(len(data))
      
-    if not data: 
-        break
+    if is_preamble(data):
+        print 'Received preamble.'
+        if fragment_pointer != (-1):
+            print 'Incomplete packet!'
+        fragment_pointer = 0
+    else:
+        print 'Received data.'
+        if fragment_pointer >= 0:
+            if receive_floats:
+                floats = struct.unpack('%sf' % (len(data)/4), data)
+                current_graph[fragment_pointer] = floats
+            else:
+                current_graph[fragment_pointer] = data
 
-    try:
-        # floats = struct.unpack('f', data[0:4])
-        floats = struct.unpack('%sf' % (len(data)/4), data)
-        print 'floats:', floats
-
-        # y += np.random.uniform(-0.05, 0.05, 5)
-        y = np.zeros(5)
-        y[:len(floats)] = floats
-
-        # set the new data
-        for rect, h in zip(rects, y):
-            rect.set_color('#1177aa')
-            rect.set_height(h)
-            
-
-        fig.canvas.draw()
-
-        time.sleep(0.01)
-    except KeyboardInterrupt:
-        break
+            fragment_pointer += 1
+            if fragment_pointer >= n_fragments:
+                if receive_floats:
+                    draw_image_from_floats(current_graph)
+                else:
+                    draw_image_from_string(current_graph)
+                fragment_pointer = -1
 
     # reply = 'OK...' + data
-    reply = data 
-
-    s.sendto(reply , addr)
-    print 'Message[' + addr[0] + ':' + str(addr[1]) + '] - ' + data.strip()
-     
+    # s.sendto(reply , addr)
+    
 s.close()
+
