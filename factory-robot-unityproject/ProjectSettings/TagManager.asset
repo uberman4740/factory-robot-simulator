@@ -8,6 +8,7 @@ TagManager:
   - Pickup
   - Humanoid
   - Terminal
+  - Fire
   layers:
   - Default
   - TransparentFX
