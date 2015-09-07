@@ -20,6 +20,11 @@ public static class MathUtils {
             Debug.LogError("Scale factor must divide Image length!");
             return null;
         }
+
+        if (factor == 1) {
+            return orig;
+        }
+
         int newL = l / factor;
         float[] result = new float[newL * newL];
         for (int y = 0; y < newL; y++) {
@@ -69,6 +74,41 @@ public static class MathUtils {
             }
         }
         return result;
+    }
 
+    public static float[] ImageToFloatVector(Color32[] orig, bool flipY = true) {
+        int l = Mathf.RoundToInt(Mathf.Sqrt(orig.Length));
+        if (l * l != orig.Length) {
+            Debug.LogError("Image not a square!");
+            return null;
+        }
+
+        float[] result = new float[3*orig.Length];
+        for (int i = 0; i < orig.Length; i++) {
+            int tI = flipY ? l*(l - 1 - (i/l)) + i % l : i;
+
+            result[3 * i] = orig[tI].r / 255.0f;
+            result[3 * i + 1] = orig[tI].g / 255.0f;
+            result[3 * i + 2] = orig[tI].b / 255.0f;
+        }
+        return result;
+    }
+
+    public static byte[] ImageToByteVector(Color32[] orig, bool flipY = true) {
+        int l = Mathf.RoundToInt(Mathf.Sqrt(orig.Length));
+        if (l * l != orig.Length) {
+            Debug.LogError("Image not a square!");
+            return null;
+        }
+
+        byte[] result = new byte[3 * orig.Length];
+        for (int i = 0; i < orig.Length; i++) {
+            int tI = flipY ? l * (l - 1 - (i / l)) + i % l : i;
+
+            result[3 * i] = orig[tI].r;
+            result[3 * i + 1] = orig[tI].g;
+            result[3 * i + 2] = orig[tI].b;
+        }
+        return result;
     }
 }
