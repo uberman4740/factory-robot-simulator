@@ -33,6 +33,7 @@ from Chris Olah (http://colah.github.io ).
 # Standard library
 import cPickle
 import gzip
+import os
 
 # Third-party libraries
 import numpy as np
@@ -161,6 +162,35 @@ class Network(object):
         self.output = self.layers[-1].output
         self.output_dropout = self.layers[-1].output_dropout
         self.single_output = self.layers[-1].single_output
+
+    def save_as_file(self, filename):
+        # save all layers
+        for i, layer in enumerate(self.layers):
+            f = file(filename + '_layer' + str(i) + '.save', 'wb')
+            cPickle.dump(layer, f, protocol=cPickle.HIGHEST_PROTOCOL)
+            f.close()
+        
+
+    @classmethod
+    def load_from_file(cls, filename, mini_batch_size):
+        # load all layers
+        layers = []
+        i = 0
+        prefix = filename + '_layer'
+        while os.path.isfile(prefix + str(i) + '.save'):
+            f = file(prefix + str(i) + '.save', 'rb')
+            layers.append(cPickle.load(f))
+            f.close()
+            i += 1
+
+        if len(layers) == 0:
+            print 'Network not found!'
+            return None
+
+        print 'Loading network:', len(layers), 'layers loaded.'
+        return cls(layers, mini_batch_size)
+
+
 
     def get_single_output(self, input_to_classify):
         return self.single_output.eval({self.x_single: input_to_classify})
@@ -299,6 +329,25 @@ class ConvPoolLayer(object):
             borrow=True)
         self.params = [self.w, self.b]
 
+    def __getstate__(self):
+        return (self.filter_shape, 
+                self.image_shape, 
+                self.poolsize, 
+                self.activation_fn,
+                self.w.get_value(borrow=True),
+                self.b.get_value(borrow=True))
+
+    def __setstate__(self, state):
+        self.filter_shape = state[0]
+        self.image_shape = state[1]
+        self.poolsize = state[2]
+        self.activation_fn = state[3]
+
+        self.w = theano.shared(np.asarray(state[4], dtype=theano.config.floatX), borrow=True)
+        self.b = theano.shared(np.asarray(state[5], dtype=theano.config.floatX), borrow=True)
+        self.params = [self.w, self.b]
+
+
     def set_inpt(self, inpt, inpt_dropout, mini_batch_size):
         self.inpt = inpt.reshape(self.image_shape)
         conv_out = conv.conv2d(
@@ -344,6 +393,23 @@ class FullyConnectedLayer(object):
                  np.zeros((n_out,)),      
                 dtype=theano.config.floatX),
             name='b', borrow=True)
+        self.params = [self.w, self.b]
+
+    def __getstate__(self):
+        return (self.n_in, 
+                self.n_out, 
+                self.activation_fn,
+                self.p_dropout,
+                self.w.get_value(borrow=True),
+                self.b.get_value(borrow=True))
+
+    def __setstate__(self, state):
+        self.n_in = state[0]
+        self.n_out = state[1]
+        self.activation_fn = state[2]
+        self.p_dropout = state[3]
+        self.w = theano.shared(np.asarray(state[4], dtype=theano.config.floatX), borrow=True)
+        self.b = theano.shared(np.asarray(state[5], dtype=theano.config.floatX), borrow=True)
         self.params = [self.w, self.b]
 
     def set_inpt(self, inpt, inpt_dropout, mini_batch_size):

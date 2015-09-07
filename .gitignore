@@ -31,3 +31,6 @@ TrainingData/
 
 exp0*/
 network3.py
+
+Trash/
+*.save
