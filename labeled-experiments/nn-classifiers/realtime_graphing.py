@@ -12,7 +12,14 @@ import numpy as np
 import time
 import struct
 
+import labeling_network as lbln
+from labeling_network import Network
 
+
+network_file_names = ['stored-networks/monochrome_humanoid_classifier__00523/humanoid_net_best_larger',
+                      'stored-networks/pickupbox_classifier__01/pickup_box_classifier_best']
+
+trained_nets = [Network.load_from_file(file_name, 10) for file_name in network_file_names]
  
 HOST = ''   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
@@ -36,12 +43,34 @@ except socket.error , msg:
 print 'Socket bind complete'
  
 
-fig = plt.figure()
-ax = fig.add_subplot(111)
-img_d = ax.imshow(np.random.uniform(0.0, 1.0, (64, 64, 3)), 
-                  interpolation='nearest')
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# img_d = ax.imshow(np.random.uniform(0.0, 1.0, (64, 64, 3)), 
+#                   interpolation='nearest')
 
-fig.canvas.draw()
+# fig.canvas.draw()
+
+
+chart_fig = plt.figure()
+chart_ax = chart_fig.add_subplot(111)
+chart_ax.set_xlim(-2.5, 2.5)
+chart_ax.set_ylim(0.0, 1.0)
+
+bar_width = 0.2
+n_bars = len(trained_nets)
+
+charts = []
+chart_colors = ['#882222', '#3399bb', '#55aa22']
+for i in range(n_bars):
+    charts.append(chart_ax.bar(np.arange(5)-2 + (i - n_bars/2.0 + 0.5)*bar_width, np.ones(5), bar_width, color=chart_colors[i],  align='center'))
+    # chart2 = chart_ax.bar(np.arange(5)-2+0.5*bar_width, np.ones(5)/2, bar_width, color='#882222',  align='center')
+
+chart_fig.canvas.draw()
+
+
+
+
+
 plt.show(block=False)
 
 
@@ -53,14 +82,27 @@ current_graph = [[]] * n_fragments
 
 
 def draw_image_from_string(img):
-    img_d.set_data(
-        np.asarray(
-            [np.fromstring(i, dtype=np.uint8) for i in img]).reshape((64, 64, 3)))
-    fig.canvas.draw()
+    arr = np.asarray(
+            [np.fromstring(i, dtype=np.uint8) for i in img]).reshape((64, 64, 3))
+    # img_d.set_data(arr)
+    # fig.canvas.draw()
+
+    float_pixels = arr.reshape(12288) / 255.0
+
+    predictions = [net.get_single_output(float_pixels) for net in trained_nets]
+    # print predictions
+
+    for chart, prediction in zip(charts, predictions):
+        for rect, p in zip(chart, prediction):
+            rect.set_height(p)
+
+    chart_fig.canvas.draw()
+
 
 def draw_image_from_floats(img):
     img_d.set_data(np.asarray(img).reshape((64, 64, 3)))
     fig.canvas.draw()
+
 
 
 def is_preamble(data):
