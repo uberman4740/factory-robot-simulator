@@ -264,8 +264,8 @@ class Network(object):
                 print '    Current cost on training set: {1}'.format(epoch, np.mean(training_set_costs))
             
             if learning_curve_file_name:
-                with open(learning_curve_file_name + 'train_costs.txt', "a") as f:
-                    f.write(str(np.mean(training_set_costs)))
+                with open(learning_curve_file_name + 'train_costs.lcurve', "a") as f:
+                    f.write(str(np.mean(training_set_costs) + '\n'))
 
             training_set_costs = []
             for minibatch_index in xrange(num_training_batches):
@@ -282,8 +282,8 @@ class Network(object):
                     print("  Epoch {0}: validation accuracy {1:.5}".format(
                         epoch, validation_accuracy))
                     if learning_curve_file_name:
-                        with open(learning_curve_file_name + 'validation_accuracies.txt', "a") as f:
-                            f.write(str(validation_accuracy))
+                        with open(learning_curve_file_name + 'validation_accuracies.lcurve', "a") as f:
+                            f.write(str(validation_accuracy) + '\n')
 
 
                     if validation_accuracy >= best_validation_accuracy:
