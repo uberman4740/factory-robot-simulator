@@ -11,5 +11,6 @@ public class DisplayTexture : MonoBehaviour {
 
     void OnGUI() {
         Graphics.DrawTexture(new Rect(x, y, w, h), texture);
+        
     }
 }

@@ -48,7 +48,7 @@ GameObject:
   - 65: {fileID: 6515786}
   m_Layer: 0
   m_Name: FireBox
-  m_TagString: Pickup
+  m_TagString: Fire
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
