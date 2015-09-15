@@ -101,14 +101,14 @@ class QLearner(object):
         """
         minibatch = self.assemble_minibatch()
         if minibatch is None:
-            return
+            return -1.0
         percepts_before, percepts_after, actions, rewards = minibatch
         target_values = rewards + self.gamma*self.get_best_qs(percepts_after)
-        self.q_function.train(percepts_before, actions, target_values, learning_rate)
+        return self.q_function.train(percepts_before, actions, target_values, learning_rate)
 
 
     def get_best_qs(self, percepts):
-        qs = self.q_function.get_q_values(percepts)
+        qs = self.q_function.get_q_values_mb(percepts)
         return np.max(qs, axis=1)
 
 
@@ -197,20 +197,25 @@ class QNetwork(object):
         self.layers = layers
         self.minibatch_size = minibatch_size
         self.inpt = T.matrix('inpt')
+        self.single_inpt = T.vector('single_inpt')
         self.target_qs = T.vector('target_qs')
         self.actions = T.ivector('actions')
 
 
         init_layer = self.layers[0]
         init_layer.set_inpt(self.inpt, self.inpt, self.minibatch_size)
+        init_layer.set_single_inpt(self.single_inpt)
         for j in xrange(1, len(self.layers)):
             prev_layer, layer = self.layers[j - 1], self.layers[j]
             layer.set_inpt(
                 prev_layer.output, prev_layer.output_dropout, self.minibatch_size)
+            layer.set_single_inpt(
+                prev_layer.single_output)
 
         self.n_out = layers[-1].n_out
         self.n_in = layers[0].n_in
         self.output = layers[-1].output
+        self.single_output = self.layers[-1].single_output
 
 
         learning_rate = T.scalar('learning_rate')
@@ -226,6 +231,7 @@ class QNetwork(object):
                                      cost,
                                      updates=updates)
         self.output_fn = theano.function([self.inpt], self.output)
+        self.single_output_fn = theano.function([self.single_inpt], self.single_output)
 
     # def train(self, percepts, actions, target_qs, learning_rate):
     
@@ -235,6 +241,10 @@ class QNetwork(object):
             self.output[T.arange(T.shape(self.actions)[0]), self.actions]) ** 2)
 
 
-    def get_q_values(self, percepts):
-        """Returns current estimation of q-values for the percepts-minibatch"""
-        return self.output_fn(percepts)
+    def get_q_values_mb(self, state):
+        """Returns current estimation of q-values for the state-minibatch"""
+        return self.output_fn(state)
+
+
+    def get_q_values(self, state):
+        return self.single_output_fn(state)
