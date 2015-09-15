@@ -34,3 +34,8 @@ network3.py
 
 Trash/
 *.save
+
+videos/
+
+*.lcurve
+q-learning

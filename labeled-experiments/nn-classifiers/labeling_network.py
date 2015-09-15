@@ -169,6 +169,11 @@ class Network(object):
             f = file(filename + '_layer' + str(i) + '.save', 'wb')
             cPickle.dump(layer, f, protocol=cPickle.HIGHEST_PROTOCOL)
             f.close()
+        i = len(self.layers)
+        while os.path.isfile(filename + '_layer' + str(i) + '.save'):
+            os.remove(filename + '_layer' + str(i) + '.save')
+            i += 1
+
         
 
     @classmethod
@@ -196,7 +201,7 @@ class Network(object):
         return self.single_output.eval({self.x_single: input_to_classify})
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
-            validation_data, test_data, lmbda=0.0):
+            validation_data, test_data, best_file_name, lmbda=0.0, learning_curve_file_name=None):
         """Train the network using mini-batch stochastic gradient descent."""
         training_x, training_y = training_data
         validation_x, validation_y = validation_data
@@ -257,6 +262,10 @@ class Network(object):
         for epoch in xrange(epochs):
             if training_set_costs:
                 print '    Current cost on training set: {1}'.format(epoch, np.mean(training_set_costs))
+            
+            if learning_curve_file_name:
+                with open(learning_curve_file_name + 'train_costs.lcurve', "a") as f:
+                    f.write(str(np.mean(training_set_costs) + '\n'))
 
             training_set_costs = []
             for minibatch_index in xrange(num_training_batches):
@@ -272,7 +281,14 @@ class Network(object):
                         [validate_mb_accuracy(j) for j in xrange(num_validation_batches)])
                     print("  Epoch {0}: validation accuracy {1:.5}".format(
                         epoch, validation_accuracy))
+                    if learning_curve_file_name:
+                        with open(learning_curve_file_name + 'validation_accuracies.lcurve', "a") as f:
+                            f.write(str(validation_accuracy) + '\n')
+
+
                     if validation_accuracy >= best_validation_accuracy:
+                        self.save_as_file(best_file_name)
+
                         print("    This is the best validation accuracy to date.")
                         best_validation_accuracy = validation_accuracy
                         best_iteration = iteration
@@ -317,14 +333,17 @@ class ConvPoolLayer(object):
         self.activation_fn = activation_fn
         # initialize weights and biases
         n_out = (filter_shape[0] * np.prod(filter_shape[2:]) / np.prod(poolsize))
+        w_bound = np.sqrt(6.0 / (np.prod(filter_shape[1:] + n_out)))
         self.w = theano.shared(
             np.asarray(
-                np.random.normal(loc=0, scale=np.sqrt(1.0 / n_out), size=filter_shape),
+                np.random.uniform(-w_bound, w_bound, size=filter_shape),
+                # np.random.normal(loc=0, scale=np.sqrt(1.0 / n_out), size=filter_shape),
                 dtype=theano.config.floatX),
             borrow=True)
         self.b = theano.shared(
             np.asarray(
-                np.random.normal(loc=0, scale=1.0, size=(filter_shape[0],)),
+                # np.random.normal(loc=0, scale=1.0, size=(filter_shape[0],)),
+                np.zeros((filter_shape[0],)),
                 dtype=theano.config.floatX),
             borrow=True)
         self.params = [self.w, self.b]
