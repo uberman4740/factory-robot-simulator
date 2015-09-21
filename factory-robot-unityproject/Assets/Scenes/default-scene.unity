@@ -37,9 +37,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
---- !u!127 &3
-LevelGameManager:
-  m_ObjectHideFlags: 0
 --- !u!157 &4
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -68,6 +65,7 @@ LightmapSettings:
     m_TextureCompression: 1
     m_FinalGather: 0
     m_FinalGatherRayCount: 1024
+    m_ReflectionCompression: 2
   m_LightmapSnapshot: {fileID: 0}
   m_RuntimeCPUUsage: 25
 --- !u!196 &5
@@ -302,7 +300,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &134753365
 AudioListener:
   m_ObjectHideFlags: 0
@@ -352,6 +350,7 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
+  m_TargetEye: 3
   m_HDR: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -546,11 +545,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39ae58663aed2834db29a054d7dee5cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  targetIp: 192.168.178.20
   port: 8888
   cameraRenderTexture: {fileID: 8400000, guid: 3146b30679e0fb34b9642334f7a63725, type: 2}
   targetTextureSize: 64
-  frameSendPeriod: .300000012
-  fragmentSendPeriod: 0
+  fragmentSendPeriod: .200000003
 --- !u!1 &181661598
 GameObject:
   m_ObjectHideFlags: 0
@@ -1773,6 +1772,7 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
+  m_TargetEye: 3
   m_HDR: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
@@ -3369,6 +3369,7 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 8400000, guid: 3146b30679e0fb34b9642334f7a63725, type: 2}
   m_TargetDisplay: 0
+  m_TargetEye: 3
   m_HDR: 0
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
