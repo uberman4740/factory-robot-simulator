@@ -545,11 +545,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39ae58663aed2834db29a054d7dee5cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  targetIp: 192.168.178.20
   port: 8888
   cameraRenderTexture: {fileID: 8400000, guid: 3146b30679e0fb34b9642334f7a63725, type: 2}
   targetTextureSize: 64
-  frameSendPeriod: .100000001
-  fragmentSendPeriod: 0
+  fragmentSendPeriod: .200000003
 --- !u!1 &181661598
 GameObject:
   m_ObjectHideFlags: 0
@@ -1672,7 +1672,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &689155745
 MonoBehaviour:
   m_ObjectHideFlags: 0

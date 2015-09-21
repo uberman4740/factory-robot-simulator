@@ -94,12 +94,14 @@ public static class MathUtils {
         return result;
     }
 
-    public static byte[] ImageToByteVector(Color32[] orig, bool flipY = true) {
+    public static byte[] ImageToByteVector(Color32[] orig,  bool flipY = true) {
+
         int l = Mathf.RoundToInt(Mathf.Sqrt(orig.Length));
         if (l * l != orig.Length) {
             Debug.LogError("Image not a square!");
             return null;
         }
+
 
         byte[] result = new byte[3 * orig.Length];
         for (int i = 0; i < orig.Length; i++) {
@@ -108,6 +110,32 @@ public static class MathUtils {
             result[3 * i] = orig[tI].r;
             result[3 * i + 1] = orig[tI].g;
             result[3 * i + 2] = orig[tI].b;
+        }
+        return result;
+    }
+
+    public static byte[] ImageSliceToByteVector(
+            Color32[] orig, 
+            int lower, 
+            int upper,
+            int initSpace = 0,
+            bool flipY = true) {
+        
+        int l = Mathf.RoundToInt(Mathf.Sqrt(orig.Length));
+        if (l * l != orig.Length) {
+            Debug.LogError("Image not a square!");
+            return null;
+        }
+
+        byte[] result = new byte[initSpace + upper - lower];
+
+        for (int i = lower; i < upper; i++) {
+            int oI = flipY ? (l - ((i/3)/l) - 1)*l + (i/3) % l : i/3;
+
+            if (i % 3 == 0) result[i-lower+initSpace] = orig[oI].r;
+            else if (i % 3 == 1) result[i - lower + initSpace] = orig[oI].g;
+            else if (i % 3 == 2) result[i - lower + initSpace] = orig[oI].b;
+
         }
         return result;
     }
