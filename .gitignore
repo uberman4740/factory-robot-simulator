@@ -37,5 +37,6 @@ Trash/
 
 videos/
 
+# Logs and reports
 *.lcurve
-q-learning
+progress-logs/

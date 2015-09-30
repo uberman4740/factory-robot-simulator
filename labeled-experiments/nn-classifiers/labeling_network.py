@@ -163,10 +163,17 @@ class Network(object):
         self.output_dropout = self.layers[-1].output_dropout
         self.single_output = self.layers[-1].single_output
 
-    def save_as_file(self, filename):
+
+    def save_as_file(self, filename_prefix):
         # save all layers
         for i, layer in enumerate(self.layers):
-            f = file(filename + '_layer' + str(i) + '.save', 'wb')
+            filename = filename_prefix + '_layer' + str(i) + '.save'
+            try:
+                os.remove(filename)
+            except OSError:
+                print 'Creating file', filename
+            
+            f = file(filename, 'wb')
             cPickle.dump(layer, f, protocol=cPickle.HIGHEST_PROTOCOL)
             f.close()
         i = len(self.layers)
@@ -261,11 +268,11 @@ class Network(object):
         training_set_costs = []
         for epoch in xrange(epochs):
             if training_set_costs:
-                print '    Current cost on training set: {1}'.format(epoch, np.mean(training_set_costs))
+                print '  training error:   {1}'.format(epoch, np.mean(training_set_costs))
             
             if learning_curve_file_name:
                 with open(learning_curve_file_name + 'train_costs.lcurve', "a") as f:
-                    f.write(str(np.mean(training_set_costs) + '\n'))
+                    f.write(str(np.mean(training_set_costs)) + '\n')
 
             training_set_costs = []
             for minibatch_index in xrange(num_training_batches):
@@ -279,25 +286,25 @@ class Network(object):
                 if (iteration + 1) % num_training_batches == 0:
                     validation_accuracy = np.mean(
                         [validate_mb_accuracy(j) for j in xrange(num_validation_batches)])
-                    print("  Epoch {0}: validation accuracy {1:.5}".format(
-                        epoch, validation_accuracy))
+                    print('Epoch {0}: '.format(epoch))
+                    print('  validation error: {0:.5}'.format(validation_accuracy))
                     if learning_curve_file_name:
                         with open(learning_curve_file_name + 'validation_accuracies.lcurve', "a") as f:
-                            f.write(str(validation_accuracy) + '\n')
+                            f.write(str(-validation_accuracy) + '\n')
 
 
                     if validation_accuracy >= best_validation_accuracy:
                         if best_file_name:
                             self.save_as_file(best_file_name)
 
-                        print("    This is the best validation accuracy to date.")
+                        print('    (Best so far.)')
                         best_validation_accuracy = validation_accuracy
                         best_iteration = iteration
                         if test_data:
                             test_accuracy = np.mean(
                                 [test_mb_accuracy(j) for j in xrange(num_test_batches)])
-                            print('      The corresponding test accuracy is {0:.5}'.format(
-                                test_accuracy))
+                            print('  test error:        {0:.5}'.format(
+                                -test_accuracy))
         print("Finished training network.")
         print("Best validation accuracy of {0:.5} obtained at iteration {1}".format(
             best_validation_accuracy, best_iteration))
