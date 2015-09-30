@@ -111,6 +111,7 @@ public class HumanoidNavigationController : MonoBehaviour {
             Debug.LogWarning("No available Targets for NavigationController!");
         }
 
-        return availableTargets[Random.Range(0, availableTargets.Count)];
+		int index = Random.Range(0, availableTargets.Count);
+        return availableTargets[index];
     }
 }

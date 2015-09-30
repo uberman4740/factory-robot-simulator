@@ -16,13 +16,16 @@ public class CameraSender : MonoBehaviour {
     private Texture2D readerTexture;
     public int targetTextureSize = 64;
     
-    public int packetLength = 1024;
-    public int nFragments = 12;
+    public int packetLength;
+    public int nFragments;
     public float fragmentSendPeriod = 0.1f / 12;
 
 
     private float nextFragmentTime;
     private int fragmentCounter = 0;
+
+	// Needed to send current total reward
+	public RewardManager rewardManager;
 
 
 	// Use this for initialization
@@ -48,14 +51,28 @@ public class CameraSender : MonoBehaviour {
 
             Color32[] currentImage = MiscUtils.getCurrentCameraImage(cameraRenderTexture, readerTexture);
 
-            byte[] pixels = MathUtils.ImageSliceToByteVector(currentImage, 
+			currentImage = MathUtils.downSampleImg(currentImage, 2);
+
+			// Protocol: 
+			//  byte  0: fragment Counter (unsigned)
+			//  bytes 1, 2, 3, 4: current total reward (float)
+			//  bytes 5..: fragment data
+
+            byte[] buffer = MathUtils.ImageSliceToByteVector(currentImage, 
                 fragmentCounter*packetLength,
                 (fragmentCounter+1)*packetLength,
-                1);
+                5);
             
-            pixels[0] = (byte)fragmentCounter;
+            buffer[0] = (byte)fragmentCounter;
 
-            SendBuffer(pixels, targetDestination);
+			float[] totalReward = new float[] {rewardManager.GetTotalReward()};
+			System.Buffer.BlockCopy(totalReward, 
+			                        0, 
+			                        buffer, 
+			                        1, // offset in sent array
+			                        4); 
+
+            SendBuffer(buffer, targetDestination);
             fragmentCounter = (fragmentCounter + 1) % nFragments;
         }
 	}

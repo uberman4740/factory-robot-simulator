@@ -27,7 +27,7 @@ GameObject:
   - 198: {fileID: 19891922}
   - 199: {fileID: 19928976}
   m_Layer: 0
-  m_Name: Fire
+  m_Name: FireParticles
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46,6 +46,7 @@ GameObject:
   - 95: {fileID: 9565196}
   - 54: {fileID: 5471838}
   - 65: {fileID: 6515786}
+  - 114: {fileID: 11462818}
   m_Layer: 0
   m_Name: FireBox
   m_TagString: Fire
@@ -60,7 +61,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 183624}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -1.90999997, y: 0, z: -.680000007}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 475518}
@@ -198,6 +199,21 @@ Light:
   m_ShadowRadius: 0
   m_ShadowAngle: 0
   m_AreaSize: {x: 1, y: 1}
+--- !u!114 &11462818
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 183624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0beb3446cf8764e7f99c4ba477df5005, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collisionReward: -10
+  respawnOnCollide: 0
+  respawnRangeCenter: {x: 0, y: 0, z: 0}
+  respawnRange: {x: 32, y: 0, z: 32}
 --- !u!198 &19891922
 ParticleSystem:
   m_ObjectHideFlags: 1

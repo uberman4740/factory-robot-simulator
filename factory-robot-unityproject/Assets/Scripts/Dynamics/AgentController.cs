@@ -76,4 +76,9 @@ public class AgentController : MonoBehaviour {
 
 	    
 	}
+
+
+	public void SetCurrentAngle(float angle) {
+		currentAngle = angle;
+	}
 }

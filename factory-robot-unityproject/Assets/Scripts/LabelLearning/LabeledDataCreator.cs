@@ -34,6 +34,10 @@ public class LabeledDataCreator : MonoBehaviour {
 
     public string wallTag = "Building";
 
+	public float snapshotPeriod = .1f;
+	private float nextSnapshotTime;
+	private bool snapSwitch;
+
     /** Initializiation */
     void Start() {
         Time.timeScale = 1.0f;
@@ -50,12 +54,20 @@ public class LabeledDataCreator : MonoBehaviour {
         
         //Camera.main.enabled = false;
 
-       
+		nextSnapshotTime = Time.time + 5*snapshotPeriod;
     }
 
     void Update() {
-        if (counter < nCaptures) {
-            Snapshot();
+
+        if (Time.time > nextSnapshotTime && counter < nCaptures) {
+			nextSnapshotTime += snapshotPeriod;
+
+			if (snapSwitch) {
+				Snapshot();
+			} else {
+				SetRandomPositions();
+			}
+			snapSwitch = !snapSwitch;
         }
 
 
@@ -91,7 +103,8 @@ public class LabeledDataCreator : MonoBehaviour {
             agentRange);
 
         agent.transform.eulerAngles = new Vector3(0, Random.Range(0.0f, 360.0f), 0);
-
+//        agent.transform.eulerAngles = new Vector3(0, 90.0f, 0);
+		
         for (int i = 0; i < classificationObjects.Length; i++) {
             Transform obj = classificationObjects[i];
 
@@ -204,7 +217,7 @@ public class LabeledDataCreator : MonoBehaviour {
 
     /** Set objects' positions randomly and save a snapshot + label */
     void Snapshot() {
-        SetRandomPositions();
+        
 
         agentCamera.Render();
 

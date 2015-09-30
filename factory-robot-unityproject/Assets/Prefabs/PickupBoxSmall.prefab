@@ -15,7 +15,7 @@ GameObject:
   - 65: {fileID: 6554474}
   - 114: {fileID: 11464980}
   m_Layer: 0
-  m_Name: PickupBox
+  m_Name: PickupBoxSmall
   m_TagString: Pickup
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,8 +28,8 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 135356}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.69000006, y: 0, z: -11.2399998}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 6.29696083, y: 0, z: .374717712}
+  m_LocalScale: {x: .75, y: .600000024, z: .75}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -43,7 +43,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_Materials:
-  - {fileID: 2100000, guid: 9a5ede575f1f0814f8aa14c248557f38, type: 2}
+  - {fileID: 2100000, guid: bb4342743fac848d8827d179b2263a00, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_UseLightProbes: 1

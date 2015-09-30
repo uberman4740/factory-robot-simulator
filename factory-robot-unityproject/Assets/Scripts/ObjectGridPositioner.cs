@@ -39,7 +39,7 @@ public class ObjectGridPositioner : MonoBehaviour {
             createObjects = false;
         }
         else if (createObjects) {
-            Debug.Log("Lamps have already been created. Use Clear Lamps.");
+            Debug.Log("Objects have already been created. Use Clear Objects.");
             createObjects = false;
         }
         

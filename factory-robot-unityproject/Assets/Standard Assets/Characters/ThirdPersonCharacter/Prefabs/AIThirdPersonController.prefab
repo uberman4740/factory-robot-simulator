@@ -180,6 +180,7 @@ GameObject:
   - 195: {fileID: 19597056}
   - 114: {fileID: 11402594}
   - 114: {fileID: 11450346}
+  - 114: {fileID: 11434128}
   m_Layer: 0
   m_Name: AIThirdPersonController
   m_TagString: Humanoid
@@ -2403,6 +2404,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
+--- !u!114 &11434128
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 113348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0beb3446cf8764e7f99c4ba477df5005, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  collisionReward: -10
+  respawnOnCollide: 0
+  repel: 1
+  respawnRangeCenter: {x: 0, y: 0, z: 0}
+  respawnRange: {x: 0, y: 0, z: 0}
 --- !u!114 &11450346
 MonoBehaviour:
   m_ObjectHideFlags: 1
