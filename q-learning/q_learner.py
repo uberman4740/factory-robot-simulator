@@ -23,13 +23,15 @@ import theano
 import theano.tensor as T
 sys.path.append('../labeled-experiments/nn-classifiers/')
 from labeling_network import FullyConnectedLayer
-
+import cPickle
 
 __author__ = "Alexander Neitz"
 
 
 floatX = theano.config.floatX
 
+class ExpStoreInsufficientException(Exception):
+    pass
 
 class QLearner(object):
     """Manages observations and offers functionality to train a Q-function.
@@ -107,9 +109,39 @@ class QLearner(object):
         return self.q_function.train(percepts_before, actions, target_values, learning_rate)
 
 
+    def get_current_qs(self):
+        """Returns q-values for the state which is described by the most recent observations."""
+        if self.exp_counter >= self.state_stm:
+            current_state = self.exp_store_percepts[self.exp_counter-self.state_stm:
+                                                    self.exp_counter].flatten()
+        elif self.exp_store_current_size == self.exp_store_size:
+            current_state = np.append(self.exp_store_percepts[self.exp_counter-self.state_stm:],
+                                      self.exp_store_percepts[:self.exp_counter])
+#            print self.exp_counter
+#            print self.state_stm
+#            print current_state.shape
+        else:
+            # not enough percepts to construct state
+            raise ExpStoreInsufficientException('Only %d percepts in experience store' % (self.exp_store_current_size))
+            
+        return self.q_function.get_q_values(current_state)
+    
+    
+    def get_current_best_action(self):
+        return np.argmax(self.get_current_qs())
+                
+     
+    def get_current_best_q(self):
+        return np.max(self.get_current_qs())
+    
+
     def get_best_qs(self, percepts):
         qs = self.q_function.get_q_values_mb(percepts)
         return np.max(qs, axis=1)
+    
+    
+#    def get_best_action(self, percepts):
+#        qs = self.q_function.get_q_values
 
 
     def assemble_minibatch(self):
@@ -241,10 +273,50 @@ class QNetwork(object):
             self.output[T.arange(T.shape(self.actions)[0]), self.actions]) ** 2)
 
 
-    def get_q_values_mb(self, state):
+    def get_q_values_mb(self, state_mb):
         """Returns current estimation of q-values for the state-minibatch"""
-        return self.output_fn(state)
+        return self.output_fn(state_mb)
 
 
     def get_q_values(self, state):
         return self.single_output_fn(state)
+
+
+    def save_as_file(self, filename_prefix):
+        # save all layers
+        for i, layer in enumerate(self.layers):
+            filename = filename_prefix + '_layer' + str(i) + '.save'
+            try:
+                os.remove(filename)
+            except OSError:
+                print 'Creating file', filename
+            
+            f = file(filename, 'wb')
+            cPickle.dump(layer, f, protocol=cPickle.HIGHEST_PROTOCOL)
+            f.close()
+        i = len(self.layers)
+        while os.path.isfile(filename + '_layer' + str(i) + '.save'):
+            os.remove(filename + '_layer' + str(i) + '.save')
+            i += 1
+
+
+    @classmethod
+    def load_from_file(cls, filename, mini_batch_size):
+        # load all layers
+        layers = []
+        i = 0
+        prefix = filename + '_layer'
+        while os.path.isfile(prefix + str(i) + '.save'):
+            f = file(prefix + str(i) + '.save', 'rb')
+            layers.append(cPickle.load(f))
+            f.close()
+            i += 1
+        
+        if len(layers) == 0:
+            print 'Network not found!'
+            return None
+        
+        print 'Loading network:', len(layers), 'layers loaded.'
+        return cls(layers, mini_batch_size)
+
+
