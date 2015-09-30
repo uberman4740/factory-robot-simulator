@@ -22,6 +22,11 @@ import numpy as np
 PORT = 8888
 IP = "0.0.0.0"
 
+REMOTE_HOST = "127.0.0.1"
+REMOTE_PORT = 8889
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 n_fragments = 2
 fragment_length = 32*64*3
 image_length = 64
@@ -49,6 +54,9 @@ def draw_image(figure, figure_image, img_array):
     figure.canvas.draw()
 
 
+def send_data(x):
+    sock.sendto(chr(int(x) % 256), (REMOTE_HOST, REMOTE_PORT))
+
 if __name__ == "__main__":
     ReceiverSocket = ThreadedUDPServer((IP,PORT), UDPHandler)
     ServerThread = threading.Thread(target=ReceiverSocket.serve_forever)
@@ -61,7 +69,7 @@ if __name__ == "__main__":
     # Set up image plot.
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    img_d = ax.imshow(np.random.randint(0, 256, (64, 64, 3)), 
+    img_d = ax.imshow(np.random.randint(0, 256, (64, 64, 3)),
                       interpolation='nearest')
     fig.canvas.draw()
     plt.show(block=False)
@@ -78,6 +86,9 @@ if __name__ == "__main__":
             current_img_array[i*fragment_length : (i+1)*fragment_length] = data[i]
         draw_image(fig, img_d, 
             current_img_array.reshape((image_length, image_length, 3)))
+        plt.pause(0.01)
+
+        time.sleep(0.01)
 
         # FPS      
         total_frames += 1

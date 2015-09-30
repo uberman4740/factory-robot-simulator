@@ -40,3 +40,4 @@ videos/
 # Logs and reports
 *.lcurve
 progress-logs/
+plots/
