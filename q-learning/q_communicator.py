@@ -11,6 +11,7 @@ without major inaccuracies even if packets get lost or the order is changed.
 
 """
 
+import cPickle
 import socket
 import threading
 import SocketServer
@@ -26,6 +27,7 @@ from labeling_network import FullyConnectedLayer, linear, Network
 import livebarchart
 from safetyrule import SafetyRule
 
+enable_plotting = False
 
 # Period in which Q-Function is adjusted
 learning_period = 0.01
@@ -38,12 +40,12 @@ time_next_decision = time.time() + decision_period
 random_action_duration = 0.75
 random_action_termination = time.time()
 
-q_network_save_filename = 'saved-q-networks/q-network'
+q_network_save_filename = 'saved-q-networks/q-network-trained'
 q_network_save_period = 5.0 # time in seconds
 q_network_next_save_time = time.time() + q_network_save_period
 
-#q_network_load_filename = None
-q_network_load_filename = 'saved-q-networks/q-network_trained'
+q_network_load_filename = 'saved-q-networks/q-network-tr'
+# q_network_load_filename = 'saved-q-networks/q-network_trained'
 
 MB_SIZE = 10
 EXP_STORE_SIZE = 50000
@@ -51,11 +53,11 @@ PERCEPT_LENGTH = 25
 N_ACTIONS = 3
 STATE_STM = 4
 GAMMA = 0.98
-LEARNING_RATE = 0.0008
+LEARNING_RATE = 0.0004
 LEARNING_ITERATIONS_PER_UPDATE = 80
 BURN_IN = 50
 
-EPSILON_START = 1.0
+EPSILON_START = 0.001
 EPSILON_END = 0.00
 EPSILON_DECREASE_DURATION = 1600.0
 
@@ -64,18 +66,25 @@ Q_HIDDEN_NEURONS = 200
 prng = np.random.RandomState(1234567)
 
 
-safety_rules = [SafetyRule(vector_start=0,
-                           vector_stop=5,
-                           threshold=0.15,
-                           safety_action=3)]
+safety_rules = []
+# safety_rules = [SafetyRule(vector_start=0,
+#                            vector_stop=5,
+#                            threshold=0.15,
+#                            safety_action=3)]
 current_safety_action = None
+
 
 
 labeling_network_file_name = 'saved-nns/best_encoder_bigdata'
 labeling_net = Network.load_from_file(labeling_network_file_name, MB_SIZE)
+state_encoder_fn = labeling_net.get_single_output
 
 
-if q_network_load_filename:
+# pca_encoder = cPickle.load(open('saved-pcas/pickled_pca_75'))
+# def state_encoder_fn(x): return pca_encoder.transform(x)[0]
+
+
+if q_network_load_filename is not None:
     q_function = QNetwork.load_from_file(q_network_load_filename, MB_SIZE)
 else:
     hidden_layer = FullyConnectedLayer(STATE_STM*PERCEPT_LENGTH,
@@ -94,8 +103,9 @@ q_learner = QLearner(q_function,
                      minibatch_size=MB_SIZE,
                      prng=prng)
 
-bar_plotter = livebarchart.LiveBarPlotter(n_categories=5,
-                                         n_bars_per_category=5)
+if enable_plotting:
+    bar_plotter = livebarchart.LiveBarPlotter(n_categories=5,
+                                              n_bars_per_category=5)
 
 PORT = 8888
 IP = "0.0.0.0"
@@ -145,11 +155,13 @@ def learn(q_learner, learning_rate):
 def remember_and_decide(percept, last_action, previous_reward, epsilon, prng,
                         n_actions, safety_rules):
     
-    encoding = labeling_net.get_single_output(percept)
+    encoding = state_encoder_fn(percept)
     q_learner.add_observation(encoding.astype(np.float32),
                               last_action,
                               previous_reward)
-    bar_plotter.update(encoding)
+
+    if enable_plotting:
+        bar_plotter.update(encoding)
 
     for safety_rule in safety_rules:
         global current_safety_action;
@@ -205,8 +217,7 @@ if __name__ == "__main__":
         # Assemble image. TODO: performance (not every frame)
         for i in range(n_fragments):
             current_img_array[i*fragment_length : (i+1)*fragment_length] = data[i]
-        
-        
+
         if time.time() > time_next_learning \
                 and q_learner.exp_store_current_size > BURN_IN:
             time_next_learning = time.time() + learning_period
@@ -217,7 +228,6 @@ if __name__ == "__main__":
 #        if time.time() > time_next_random_action:
 #            time_next_random_action = time.time() + random_action_change_period
 #            current_random_action = prng.randint(N_ACTIONS)
-
 
         if time.time() > time_next_decision:
             time_next_decision = time.time() + decision_period
