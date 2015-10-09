@@ -3,12 +3,13 @@ using System.Collections;
 
 public class RewardManager : MonoBehaviour {
 
+	public TimeStepManager timeStepManager;
 	private float totalReward;
-//	private float currentReward;
 
 	private float unnormalizedRewardRate;
 	public float recentRewardDiscountPerMinute;
 	private float decayRate; // per second
+
 
 	public void PutReward(float reward) {
 		totalReward += reward;
@@ -35,6 +36,7 @@ public class RewardManager : MonoBehaviour {
 	}
 
 	void Update() {
-		unnormalizedRewardRate -= unnormalizedRewardRate*Time.smoothDeltaTime*decayRate;
+		float deltaTime = timeStepManager.deltaTime;
+		unnormalizedRewardRate -= unnormalizedRewardRate * deltaTime * decayRate;
 	}
 }

@@ -4,7 +4,9 @@ using System.Collections;
 public class AgentRemoteControl : MonoBehaviour {
 
 	public InputListener inputListener;
+	public TimeStepManager timeStepManager;
 
+	/* Dynamics */
 	public float speed;
 	public float turningSpeed;
 
@@ -12,24 +14,33 @@ public class AgentRemoteControl : MonoBehaviour {
 	public float deceleration;
 
 	public float revSpeed;
+	private float currentSpeed;	
 
-	private float currentSpeed;
-	
+	private int _currentAction;
+	public int currentAction {
+		get {
+			return _currentAction;
+		}
+	}
 
 	void Update () {
-		bool accelerate = true;
-		int action = inputListener.GetCurrentInput();
-
-		if (Input.GetKey(KeyCode.DownArrow)) {
-			action = 3;
+		// Only execute this Update method if TimeStepManager allows it.
+		if (timeStepManager.state != TimeStepManager.State.Advance) {
+			return;
 		}
 
-		switch (action) {
+		float deltaTime = timeStepManager.deltaTime;
+
+		bool accelerate = true;
+		_currentAction = inputListener.currentInputAction;
+
+
+		switch (_currentAction) {
 		case 0:
-			transform.Rotate(0,-turningSpeed*Time.smoothDeltaTime, 0);
+			transform.Rotate(0,-turningSpeed * deltaTime, 0);
 			break;
 		case 2:
-			transform.Rotate(0, turningSpeed*Time.smoothDeltaTime, 0);
+			transform.Rotate(0, turningSpeed * deltaTime, 0);
 			break;
 		case 3:
 			accelerate = false;
@@ -38,23 +49,23 @@ public class AgentRemoteControl : MonoBehaviour {
 
 		if (accelerate) {
 			if (currentSpeed < speed) {
-				currentSpeed += acceleration * Time.smoothDeltaTime;
+				currentSpeed += acceleration * deltaTime;
 				if (currentSpeed > speed) {
 					currentSpeed = speed;
 				}
 			}
 		} else {
 			if (currentSpeed > revSpeed) {
-				currentSpeed -= deceleration * Time.smoothDeltaTime;
+				currentSpeed -= deceleration * deltaTime;
 				if (currentSpeed < revSpeed) {
 					currentSpeed = revSpeed;
 				}
 			}
 		}
 
-		transform.Translate(Vector3.forward * currentSpeed * Time.smoothDeltaTime);
+		transform.Translate(Vector3.forward * currentSpeed * deltaTime);
 	}
-
+	
 	public float GetCurrentSpeed() {
 		return currentSpeed;
 	}

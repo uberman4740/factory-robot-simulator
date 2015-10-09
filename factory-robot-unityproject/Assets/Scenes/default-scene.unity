@@ -645,8 +645,9 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 181123048}
-  - 114: {fileID: 181123049}
   - 114: {fileID: 181123050}
+  - 114: {fileID: 181123049}
+  - 114: {fileID: 181123051}
   m_Layer: 0
   m_Name: NetworkCommunicator
   m_TagString: Untagged
@@ -674,17 +675,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 181123047}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39ae58663aed2834db29a054d7dee5cc, type: 3}
+  m_Script: {fileID: 11500000, guid: 1fe4ccfc4a9264c5e8c4602ea714c5dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetIp: 127.0.0.1
-  port: 8888
+  nFragments: 2
+  imgFragmentLength: 6144
   cameraRenderTexture: {fileID: 8400000, guid: 3146b30679e0fb34b9642334f7a63725, type: 2}
   targetTextureSize: 64
-  packetLength: 6144
-  nFragments: 2
-  fragmentSendPeriod: 0
   rewardManager: {fileID: 964196320}
+  agentRemoteControl: {fileID: 964196321}
 --- !u!114 &181123050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -697,6 +696,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   port: 8889
+--- !u!114 &181123051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 181123047}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaeb25abf52ac4d8ca23df969c182cca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetIp: 127.0.0.1
+  port: 8888
 --- !u!1 &181661598
 GameObject:
   m_ObjectHideFlags: 0
@@ -1296,6 +1308,7 @@ Transform:
   - {fileID: 1306038816}
   - {fileID: 181123048}
   - {fileID: 1975217315}
+  - {fileID: 1706539976}
   m_Father: {fileID: 0}
   m_RootOrder: 6
 --- !u!1 &512653156
@@ -2691,6 +2704,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b65b2bacd1554038932dcc4c2a25772, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  timeStepManager: {fileID: 1706539975}
   recentRewardDiscountPerMinute: .5
 --- !u!114 &964196321
 MonoBehaviour:
@@ -2704,6 +2718,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputListener: {fileID: 181123050}
+  timeStepManager: {fileID: 1706539975}
   speed: 1.5
   turningSpeed: 70
   acceleration: 2
@@ -2723,7 +2738,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &966722278
 Transform:
   m_ObjectHideFlags: 0
@@ -2903,7 +2918,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1044658070
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3698,7 +3713,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   x: 10
-  y: 80
+  y: 120
   w: 150
   h: 150
   texture: {fileID: 8400000, guid: 3146b30679e0fb34b9642334f7a63725, type: 2}
@@ -3730,6 +3745,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   position: {x: 0, y: 0}
+  timeStepManager: {fileID: 1706539975}
 --- !u!114 &1306038820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3743,7 +3759,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rewardManager: {fileID: 964196320}
   inputListener: {fileID: 181123050}
-  position: {x: 0, y: 20}
+  position: {x: 0, y: 60}
 --- !u!114 &1306038821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5049,6 +5065,50 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
   m_IsPrefabParent: 0
+--- !u!1 &1706539974
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1706539976}
+  - 114: {fileID: 1706539975}
+  m_Layer: 0
+  m_Name: TimeStepManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1706539975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1706539974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f9a9b1a5c2614b8f99abf9a80af3f4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  deltaTime: .0350000001
+  timeoutPeriod: .5
+  sensorConverter: {fileID: 181123049}
+  socketSender: {fileID: 181123051}
+  inputListener: {fileID: 181123050}
+--- !u!4 &1706539976
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1706539974}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 496847652}
+  m_RootOrder: 5
 --- !u!1 &1713405992
 GameObject:
   m_ObjectHideFlags: 0
@@ -5661,7 +5721,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1975217314}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 24582a787937b4df8aa5dc11c23c5a0b, type: 3}
   m_Name: 

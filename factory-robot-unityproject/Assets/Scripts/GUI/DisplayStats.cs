@@ -15,7 +15,7 @@ public class DisplayStats : MonoBehaviour {
 		GUI.Label(new Rect(position.x, position.y + 20, 400, 50), 
 		          "Current reward rate: " + rewardManager.GetRewardRate() + " / sec");
 		GUI.Label(new Rect(position.x, position.y + 40, 400, 50), 
-		          "Current input action: " + inputListener.GetCurrentInput());
+		          "Current input action: " + inputListener.currentInputAction);
 
 	}
 }

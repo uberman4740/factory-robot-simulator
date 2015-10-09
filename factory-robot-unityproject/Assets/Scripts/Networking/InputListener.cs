@@ -11,7 +11,19 @@ public class InputListener : MonoBehaviour {
 	private Socket socket;
 	private byte[] buffer = new byte[16];
 
-	private int currentInput;
+	private byte _currentFrameCounter;
+	public byte currentFrameCounter {
+		get {
+			return _currentFrameCounter;
+		}
+	}
+	private int _currentInputAction;
+	public int currentInputAction {
+		get {
+			return _currentInputAction;
+		}
+	}
+	private bool receivedBytes;
 
 
 	void Start () {
@@ -35,14 +47,19 @@ public class InputListener : MonoBehaviour {
 				                                   SocketFlags.None);
 
 				if (bytesReceived > 0) {
-					currentInput = buffer[0];
+					receivedBytes = true;
+					_currentFrameCounter = buffer[0];
+					_currentInputAction = buffer[1];
 				}
 			}
 		}
 	}
 
-	public int GetCurrentInput() {
-		return currentInput;
+	/** Queries the flag receivedBytes, which will be set to false. */
+	public bool ReceivedBytes() {
+		bool result = receivedBytes;
+		receivedBytes = false;
+		return result;
 	}
 
 	void OnApplicationQuit() {

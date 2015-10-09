@@ -57,10 +57,10 @@ public class CameraSender : MonoBehaviour {
 			//  byte  0: fragment Counter (unsigned)
 			//  bytes 1, 2, 3, 4: current total reward (float)
 			//  bytes 5..: fragment data
-
             byte[] buffer = MathUtils.ImageSliceToByteVector(currentImage, 
                 fragmentCounter*packetLength,
                 (fragmentCounter+1)*packetLength,
+                packetLength + 5,
                 5);
             
             buffer[0] = (byte)fragmentCounter;

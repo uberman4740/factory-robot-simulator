@@ -114,29 +114,40 @@ public static class MathUtils {
         return result;
     }
 
-    public static byte[] ImageSliceToByteVector(
-            Color32[] orig, 
-            int lower, 
-            int upper,
-            int initSpace = 0,
-            bool flipY = true) {
-        
-        int l = Mathf.RoundToInt(Mathf.Sqrt(orig.Length));
-        if (l * l != orig.Length) {
-            Debug.LogError("Image not a square!");
-            return null;
-        }
+	public static byte[] ImageSliceToByteVector(
+			Color32[] orig, 
+			int lower, 
+			int upper,
+			int arrayLength, 
+			int startPos = 0,
+			bool flipY = true) {
+		
+		int l = Mathf.RoundToInt(Mathf.Sqrt(orig.Length));
+		if (l * l != orig.Length) {
+			Debug.LogError("Image not a square!");
+			return null;
+		}
+		if (arrayLength < startPos + upper - lower) {
+			throw new UnityException("arrayLength too short.");
+		}
+		byte[] result = new byte[arrayLength];
+		for (int i = lower; i < upper; i++) {
+			int oI = flipY ? (l - ((i/3)/l) - 1)*l + (i/3) % l : i/3;
+			
+			if (i % 3 == 0) result[i-lower+startPos] = orig[oI].r;
+			else if (i % 3 == 1) result[i - lower + startPos] = orig[oI].g;
+			else if (i % 3 == 2) result[i - lower + startPos] = orig[oI].b;
 
-        byte[] result = new byte[initSpace + upper - lower];
+		}
+		return result;
+	}
 
-        for (int i = lower; i < upper; i++) {
-            int oI = flipY ? (l - ((i/3)/l) - 1)*l + (i/3) % l : i/3;
-
-            if (i % 3 == 0) result[i-lower+initSpace] = orig[oI].r;
-            else if (i % 3 == 1) result[i - lower + initSpace] = orig[oI].g;
-            else if (i % 3 == 2) result[i - lower + initSpace] = orig[oI].b;
-
-        }
-        return result;
-    }
+	public static int GetArraySum(byte[] arr, int lower, int upper, int modulus) {
+		int sum = 0;
+		
+		for (int i = lower; i < upper; i++) {
+			sum = (sum + arr[i]) % modulus;
+		}
+		return sum;
+	}
 }

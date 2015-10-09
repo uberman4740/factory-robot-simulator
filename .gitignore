@@ -41,3 +41,10 @@ videos/
 *.lcurve
 progress-logs/
 plots/
+**/labeling-vis/*.png
+**/pca/results/
+**/saved-pcas/*
+**/pickled*
+
+# IDE files
+.idea/
