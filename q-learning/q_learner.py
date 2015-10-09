@@ -92,7 +92,6 @@ class QLearner(object):
             self.exp_store_rewards[(self.exp_counter - 1) % self.exp_store_size] = reward
         self.increment_exp_counter()
 
-
     def train_q_function(self, learning_rate):
         """Trains the Q-function with a minibatch from the learner's experience store.
 
@@ -107,7 +106,6 @@ class QLearner(object):
         percepts_before, percepts_after, actions, rewards = minibatch
         target_values = rewards + self.gamma*self.get_best_qs(percepts_after)
         return self.q_function.train(percepts_before, actions, target_values, learning_rate)
-
 
     def get_current_qs(self):
         """Returns q-values for the state which is described by the most recent observations."""
@@ -125,15 +123,12 @@ class QLearner(object):
             raise ExpStoreInsufficientException('Only %d percepts in experience store' % (self.exp_store_current_size))
             
         return self.q_function.get_q_values(current_state)
-    
-    
+
     def get_current_best_action(self):
         return np.argmax(self.get_current_qs())
-                
-     
+
     def get_current_best_q(self):
         return np.max(self.get_current_qs())
-    
 
     def get_best_qs(self, percepts):
         qs = self.q_function.get_q_values_mb(percepts)
@@ -142,7 +137,6 @@ class QLearner(object):
     
 #    def get_best_action(self, percepts):
 #        qs = self.q_function.get_q_values
-
 
     def assemble_minibatch(self):
         """Constructs a minibatch of training examples from the experience store.
@@ -165,7 +159,6 @@ class QLearner(object):
                 self.get_action_minibatch(aug_indices[:, -1]),
                 self.get_reward_minibatch(aug_indices[:, -1]))
 
-
     def get_percept_minibatch(self, aug_indices):
         """Constructs a minibatch of percepts
 
@@ -182,7 +175,6 @@ class QLearner(object):
                .reshape(self.minibatch_size,
                         self.state_stm * self.percept_length)
 
-
     def get_action_minibatch(self, indices):
         """Constructs a minibatch of actions.
 
@@ -195,7 +187,6 @@ class QLearner(object):
         """
         return self.exp_store_actions[indices]
 
-
     def get_reward_minibatch(self, indices):
         """Constructs a minibatch of rewards.
 
@@ -207,7 +198,6 @@ class QLearner(object):
             Reward-minibatch as 1D-numpy-array (floatX)
         """
         return self.exp_store_rewards[indices]
-
 
     def increment_exp_counter(self):
         """Increments experience counter (wraps around) and keeps track of its size."""
@@ -233,7 +223,6 @@ class QNetwork(object):
         self.target_qs = T.vector('target_qs')
         self.actions = T.ivector('actions')
 
-
         init_layer = self.layers[0]
         init_layer.set_inpt(self.inpt, self.inpt, self.minibatch_size)
         init_layer.set_single_inpt(self.single_inpt)
@@ -248,7 +237,6 @@ class QNetwork(object):
         self.n_in = layers[0].n_in
         self.output = layers[-1].output
         self.single_output = self.layers[-1].single_output
-
 
         learning_rate = T.scalar('learning_rate')
         params = [param for layer in self.layers for param in layer.params]
@@ -265,22 +253,17 @@ class QNetwork(object):
         self.output_fn = theano.function([self.inpt], self.output)
         self.single_output_fn = theano.function([self.single_inpt], self.single_output)
 
-    # def train(self, percepts, actions, target_qs, learning_rate):
-    
     def get_cost(self):
         """Returns symbolic squared difference between targets and relevant q-values"""
         return T.mean((self.target_qs - \
             self.output[T.arange(T.shape(self.actions)[0]), self.actions]) ** 2)
 
-
     def get_q_values_mb(self, state_mb):
         """Returns current estimation of q-values for the state-minibatch"""
         return self.output_fn(state_mb)
 
-
     def get_q_values(self, state):
         return self.single_output_fn(state)
-
 
     def save_as_file(self, filename_prefix):
         # save all layers
