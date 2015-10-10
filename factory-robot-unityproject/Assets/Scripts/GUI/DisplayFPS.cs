@@ -12,12 +12,16 @@ public class DisplayFPS : MonoBehaviour {
 	private float currentFps = 0.0f;
 	private float averageFps;
 		
+	private float firstStepTime = -1.0f;
+
 	void Start() {
 		lastTimeStep = Time.realtimeSinceStartup;
 	}
 
 	void Update() {
+
 		if (timeStepManager.state == TimeStepManager.State.Advance) {
+
 			timeStepCounter++;
 
 			float newFps = 1.0f / (Time.realtimeSinceStartup - lastTimeStep);
@@ -25,7 +29,12 @@ public class DisplayFPS : MonoBehaviour {
 
 			currentFps = currentFpsSmoothing * currentFps + (1 - currentFpsSmoothing) * newFps;
 
-			averageFps = timeStepCounter / Time.realtimeSinceStartup;
+			if (timeStepCounter == 2) {
+				firstStepTime = Time.realtimeSinceStartup;	
+			}
+			if (timeStepCounter > 2) {
+				averageFps = (timeStepCounter-2) / (Time.realtimeSinceStartup - firstStepTime);
+			}
 
 		}
 	}
