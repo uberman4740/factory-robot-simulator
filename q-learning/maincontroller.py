@@ -3,18 +3,20 @@
 """maincontroller.py: Central management of Q-Learning data flow and communication."""
 
 import socket
+import time
 
 import numpy as np
-import time
 
 from q_learner import QLearner, QNetwork
 import inputlistener
 from sensordecoder import SensorDecoder
 import params as ps
 from labeling_network import FullyConnectedLayer, linear, Network
+from log import log
+
 
 class MainController(object):
-    RECEIVE, SEND = range(2)
+    RECEIVE, SEND, LEARN = range(3)
 
     def __init__(self,
                  q_learner,
@@ -23,6 +25,8 @@ class MainController(object):
                  timeout_period,
                  remote_host,
                  remote_port,
+                 learning_rate,
+                 learning_iterations_per_step,
                  random_action_duration,  # in number of frames.
                  epsilon_decrease_duration,  # in number of frames.
                  epsilon_start=1.0,
@@ -44,6 +48,8 @@ class MainController(object):
         self.sender_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.remote_host = remote_host
         self.remote_port = remote_port
+        self.learning_rate = learning_rate
+        self.learning_iterations_per_step = learning_iterations_per_step
         if prng is not None:
             self.prng = prng
         else:
@@ -55,30 +61,45 @@ class MainController(object):
         self.epsilon_start = epsilon_start
         self.epsilon_end = epsilon_end
         self.burn_in = burn_in
+        self.current_total_reward = 0
 
     def do(self):
         """Check for data receipt and send decisions to remote host. """
         if self.current_state == MainController.RECEIVE:
-            data = inputlistener.collect_current_data()
-            if len(data) > 0:
-                print 'Received data.'
-                for packet in data:
-                    self.sensor_decoder.add_data(packet, self.frame_counter)
-                if self.sensor_decoder.state_info_complete():
-                    percept, prev_action, prev_reward = self.sensor_decoder. \
-                        get_current_data()
-                    self.remember_percept(percept, prev_action, prev_reward)
-                    self.current_decision = self.get_decision()
-                    self.advance_frame()
-                    self.current_state = MainController.SEND
             if self.timeout():
-                print 'Timeout!'
+                log('Timeout.')
                 self.current_state = MainController.SEND
+            else:
+                data = inputlistener.collect_current_data()
+                if len(data) > 0:
+                    log('Received data ({0}):'.format(len(data)))
+                    for packet in data:
+                        self.sensor_decoder.add_data(packet, self.frame_counter)
+                    if self.sensor_decoder.state_info_complete():
+                        percept, prev_action, total_reward = self.sensor_decoder. \
+                            get_current_data()
+                        self.remember_percept(percept,
+                                              prev_action,
+                                              total_reward - self.current_total_reward)
+                        self.current_total_reward = total_reward
+                        self.current_decision = self.get_decision()
+                        self.advance_frame()
+                        self.current_state = MainController.SEND
 
         if self.current_state == MainController.SEND:
-            print 'Sending... (total_steps={0}, current_decision={1})'.format(self.total_steps,
-                                                                              self.current_decision)
+            log('Sending... (total_steps={0}, current_decision={1})'.format(self.total_steps,
+                                                                            self.current_decision))
             self.send_decision(self.current_decision)
+            self.current_state = MainController.LEARN
+
+        if self.current_state == MainController.LEARN:
+            log('Training...')
+            if self.total_steps > self.burn_in:
+                for i in xrange(self.learning_iterations_per_step):
+                    self.q_learner.train_q_function(self.learning_rate)
+                log('qs: {0}'.format(self.q_learner.get_current_qs()), 1)
+
+            log('Training steps completed.')
             self.current_state = MainController.RECEIVE
 
     def remember_percept(self, percept, last_action, previous_reward):
@@ -94,7 +115,7 @@ class MainController(object):
                       self.epsilon_start -
                       (self.epsilon_start - self.epsilon_end) *
                       1. * self.total_steps / self.epsilon_decrease_duration)
-
+        log('epsilon: {0:.4}'.format(epsilon), 1)
         if self.current_randaction_termination > self.total_steps:
             return self.frame_counter, self.current_randaction
         if self.prng.uniform(0, 1) >= epsilon \
@@ -112,7 +133,7 @@ class MainController(object):
         """Send (frame_counter, action)-tuple to remote host."""
         self.last_send_realtime = time.time()
         if decision is None:
-            print 'send_decision: decision is None'
+            log('send_decision: decision is None')
             return
         prev_frame_counter, action = decision
         data = [prev_frame_counter, action]
@@ -141,7 +162,7 @@ def load_labeling_function(filename, mb_size):
 
 
 def load_q_network(filename, state_stm, percept_length,
-                    q_hidden_neurons, n_actions, mb_size):
+                   q_hidden_neurons, n_actions, mb_size):
     if filename is not None:
         return QNetwork.load_from_file(filename, mb_size)
     else:
@@ -154,7 +175,8 @@ def load_q_network(filename, state_stm, percept_length,
 
 
 def main():
-    prng = prng=np.random.RandomState(ps.PRNG_SEED)
+    # gc.disable()
+    prng = np.random.RandomState(ps.PRNG_SEED)
     sensor_decoder = SensorDecoder(n_fragments=ps.N_FRAGMENTS,
                                    n_checksum_bytes=ps.N_CHECKSUM_BYTES,
                                    frame_counter_position=ps.FRAME_COUNTER_POS,
@@ -170,11 +192,11 @@ def main():
     state_encoder_fn = labeling_net.get_single_output
 
     q_function = load_q_network(ps.Q_NETWORK_LOAD_FILENAME,
-                                 ps.STATE_STM,
-                                 ps.PERCEPT_LENGTH,
-                                 ps.Q_HIDDEN_NEURONS,
-                                 ps.N_ACTIONS,
-                                 ps.MB_SIZE)
+                                ps.STATE_STM,
+                                ps.PERCEPT_LENGTH,
+                                ps.Q_HIDDEN_NEURONS,
+                                ps.N_ACTIONS,
+                                ps.MB_SIZE)
     q_learner = QLearner(q_function,
                          exp_store_size=ps.EXP_STORE_SIZE,
                          percept_length=ps.PERCEPT_LENGTH,
@@ -190,6 +212,8 @@ def main():
                                      timeout_period=ps.TIMEOUT_PERIOD,
                                      remote_host=ps.REMOTE_HOST,
                                      remote_port=ps.REMOTE_PORT,
+                                     learning_rate=ps.LEARNING_RATE,
+                                     learning_iterations_per_step=ps.LEARNING_ITERATIONS_PER_STEP,
                                      random_action_duration=ps.RANDOM_ACTION_DURATION,
                                      epsilon_decrease_duration=ps.EPSILON_DECREASE_DURATION,
                                      epsilon_start=ps.EPSILON_START,
