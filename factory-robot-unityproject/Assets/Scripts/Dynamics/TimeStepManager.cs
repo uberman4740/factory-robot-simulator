@@ -27,7 +27,7 @@ public class TimeStepManager : MonoBehaviour {
 	}
 
 
-	void LateUpdate() {
+	void Update() {
 		if (_state == State.Advance) {
 			SendFrame();
 			_state = State.Receive;
@@ -46,7 +46,7 @@ public class TimeStepManager : MonoBehaviour {
 			}
 
 			if (IsTimedOut()) {
-				Debug.Log ("Timeout.");
+				Debug.LogFormat("{1,5} Timeout. sensorConverter.frameCounter={0}", sensorConverter.frameCounter, Time.realtimeSinceStartup);
 				SendFrame();
 			}
 		}
