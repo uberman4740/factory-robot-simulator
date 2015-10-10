@@ -11,8 +11,9 @@ current_data = []
 
 def collect_current_data():
     global current_data
-    d = current_data
-    current_data = []
+    d = []
+    while len(current_data) > 0:
+        d.append(current_data.pop())
     return d
 
 
