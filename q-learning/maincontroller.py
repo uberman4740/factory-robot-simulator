@@ -16,7 +16,9 @@ import params as ps
 from labeling_network import FullyConnectedLayer, linear, Network
 from log import log
 from expstoreprint import export_exp_store
-import livecharting
+# import livecharting
+import pyqtlivecharting
+import sys
 
 
 # import livebarchart
@@ -40,7 +42,8 @@ class MainController(object):
                  burn_in=100,
                  extensions=[],  # plotting, etc
                  frame_counter_increment=1,
-                 prng=None):
+                 prng=None,
+                 training_error_smoothing=0.0):
         self.frame_counter = 0
         self.total_steps = 0
         self.frame_counter_increment = frame_counter_increment
@@ -68,6 +71,8 @@ class MainController(object):
         self.epsilon_end = epsilon_end
         self.burn_in = burn_in
         self.current_total_reward = 0
+        self.smooth_training_error = 0.0
+        self.training_error_smoothing = training_error_smoothing
 
     def do(self):
         """Check for data receipt and send decisions to remote host. """
@@ -112,14 +117,21 @@ class MainController(object):
         if self.current_state == MainController.LEARN:
             log('Training...')
             if self.total_steps > self.burn_in:
+                mean_error = 0.0
                 for i in xrange(self.learning_iterations_per_step):
-                    self.q_learner.train_q_function(self.learning_rate)
+                    err = self.q_learner.train_q_function(self.learning_rate)
+                    mean_error = 1. * i * mean_error / (i + 1) + 1. * err / (i + 1)
+                self.smooth_training_error = ((1 - self.training_error_smoothing) * mean_error
+                                              + self.training_error_smoothing *
+                                                self.smooth_training_error)
 
                 current_qs = self.q_learner.get_current_qs()
                 # log('qs: {0}'.format(current_qs), 1)
-                if live_charting is not None:
+                if q_charting is not None:
                     for i, q in enumerate(current_qs):
-                        live_charting.set_current_value(i, q)
+                        q_charting.set_current_value(i, q)
+                if error_charting is not None:
+                    error_charting.set_current_value(0, self.smooth_training_error)
 
             log('Training steps completed.')
             self.current_state = MainController.RECEIVE
@@ -249,14 +261,16 @@ def main():
                                      epsilon_end=ps.EPSILON_END,
                                      burn_in=ps.BURN_IN,
                                      frame_counter_increment=ps.FRAME_COUNTER_INC_STEP,
-                                     prng=prng)
+                                     prng=prng,
+                                     training_error_smoothing=ps.TRAIN_ERROR_SMOOTHING)
     print 'Starting main loop.'
     while 1:
         main_controller.do()
 
 
 if __name__ == '__main__':
-    live_charting = None
+    q_charting = None
+    error_charting = None
 
     anim_thread = threading.Thread(target=main)
     anim_thread.daemon = True
@@ -264,10 +278,27 @@ if __name__ == '__main__':
 
     time.sleep(2)
     print 'start plotting'
-    live_charting = livecharting.LiveCharting(n_curves=ps.N_ACTIONS,
-                                              ymin=-1.0,
-                                              ymax=3.5,
-                                              ylabel='Q-values',
-                                              data_labels=ps.ACTION_NAMES,
-                                              x_resolution=50)
-    plt.show()
+    q_charting = pyqtlivecharting.LiveCharting(n_curves=ps.N_ACTIONS,
+                                               y_min=-1.0,
+                                               y_max=5.0,
+                                               curve_width=4,
+                                               steps=300,
+                                               title='Q-values',
+                                               ylabel='q-value')
+    error_charting = pyqtlivecharting.LiveCharting(n_curves=1,
+                                                   y_min=0,
+                                                   y_max=2.0,
+                                                   curve_width=2,
+                                                   steps=600,
+                                                   title='Training error',
+                                                   ylabel='mean error')
+    pyqtlivecharting.LiveCharting.run()
+
+    # livecharting.LiveCharting(n_curves=ps.N_ACTIONS,
+    #                           ymin=-1.0,
+    #                           ymax=3.5,
+    #                           ylabel='Q-values',
+    #                           data_labels=ps.ACTION_NAMES,
+    #                           x_resolution=50)
+    # plt.show()
+    # time.sleep(3600000)

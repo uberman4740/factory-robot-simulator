@@ -48,6 +48,10 @@ IMG_FRAGMENT_LENGTH = 32*64*3
 IMAGE_WIDTH = 64
 
 
+# --- Charting settings ---
+TRAIN_ERROR_SMOOTHING = 0.9
+
+
 # --- Network settings ---
 IN_IP = "0.0.0.0"
 IN_PORT = 8888
