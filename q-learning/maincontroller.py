@@ -4,8 +4,10 @@
 
 import socket
 import time
+import threading
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from q_learner import QLearner, QNetwork
 import inputlistener
@@ -13,7 +15,11 @@ from sensordecoder import SensorDecoder
 import params as ps
 from labeling_network import FullyConnectedLayer, linear, Network
 from log import log
+from expstoreprint import export_exp_store
+import livecharting
 
+
+# import livebarchart
 
 class MainController(object):
     RECEIVE, SEND, LEARN = range(3)
@@ -86,6 +92,17 @@ class MainController(object):
                         self.advance_frame()
                         self.current_state = MainController.SEND
 
+                        # TODO: REMOVE
+                        # if self.total_steps == 30:
+                        #     export_exp_store(self.q_learner.exp_store_percepts,
+                        #                      self.q_learner.exp_store_actions,
+                        #                      self.q_learner.exp_store_rewards,
+                        #                      filepath='exp-store-logs/',
+                        #                      state_stm=self.q_learner.state_stm,
+                        #                      lower=10,
+                        #                      upper=20)
+                        #     raise SystemExit
+
         if self.current_state == MainController.SEND:
             log('Sending... (total_steps={0}, current_decision={1})'.format(self.total_steps,
                                                                             self.current_decision))
@@ -97,7 +114,12 @@ class MainController(object):
             if self.total_steps > self.burn_in:
                 for i in xrange(self.learning_iterations_per_step):
                     self.q_learner.train_q_function(self.learning_rate)
-                log('qs: {0}'.format(self.q_learner.get_current_qs()), 1)
+
+                current_qs = self.q_learner.get_current_qs()
+                # log('qs: {0}'.format(current_qs), 1)
+                if live_charting is not None:
+                    for i, q in enumerate(current_qs):
+                        live_charting.set_current_value(i, q)
 
             log('Training steps completed.')
             self.current_state = MainController.RECEIVE
@@ -108,6 +130,9 @@ class MainController(object):
         self.q_learner.add_observation(encoding.astype(np.float32),
                                        last_action,
                                        previous_reward)
+        # self.q_learner.add_observation(percept,
+        #                                last_action,
+        #                                previous_reward)
 
     def get_decision(self):
         """Use Q-Function to decide for current action in epsilon-greedy way."""
@@ -115,10 +140,11 @@ class MainController(object):
                       self.epsilon_start -
                       (self.epsilon_start - self.epsilon_end) *
                       1. * self.total_steps / self.epsilon_decrease_duration)
+        randaction_p = 0 if epsilon == 0 else 1. / (self.randaction_duration * (1. / epsilon - 1.) + 1.)
         log('epsilon: {0:.4}'.format(epsilon), 1)
         if self.current_randaction_termination > self.total_steps:
             return self.frame_counter, self.current_randaction
-        if self.prng.uniform(0, 1) >= epsilon \
+        if self.prng.uniform(0, 1) >= randaction_p \
                 and self.q_learner.exp_store_current_size > self.burn_in:
             action = self.q_learner.get_current_best_action()
             self.current_randaction = None
@@ -163,7 +189,9 @@ def load_labeling_function(filename, mb_size):
 
 def load_q_network(filename, state_stm, percept_length,
                    q_hidden_neurons, n_actions, mb_size):
+    print 'load_q_network'
     if filename is not None:
+        print 'return load_from_file'
         return QNetwork.load_from_file(filename, mb_size)
     else:
         hidden_layer = FullyConnectedLayer(state_stm * percept_length,
@@ -171,11 +199,11 @@ def load_q_network(filename, state_stm, percept_length,
         output_layer = FullyConnectedLayer(q_hidden_neurons,
                                            n_actions,
                                            activation_fn=linear)
+        print 'return new QNetwork.'
         return QNetwork([hidden_layer, output_layer], minibatch_size=mb_size)
 
 
 def main():
-    # gc.disable()
     prng = np.random.RandomState(ps.PRNG_SEED)
     sensor_decoder = SensorDecoder(n_fragments=ps.N_FRAGMENTS,
                                    n_checksum_bytes=ps.N_CHECKSUM_BYTES,
@@ -197,6 +225,7 @@ def main():
                                 ps.Q_HIDDEN_NEURONS,
                                 ps.N_ACTIONS,
                                 ps.MB_SIZE)
+
     q_learner = QLearner(q_function,
                          exp_store_size=ps.EXP_STORE_SIZE,
                          percept_length=ps.PERCEPT_LENGTH,
@@ -221,9 +250,24 @@ def main():
                                      burn_in=ps.BURN_IN,
                                      frame_counter_increment=ps.FRAME_COUNTER_INC_STEP,
                                      prng=prng)
+    print 'Starting main loop.'
     while 1:
         main_controller.do()
 
 
 if __name__ == '__main__':
-    main()
+    live_charting = None
+
+    anim_thread = threading.Thread(target=main)
+    anim_thread.daemon = True
+    anim_thread.start()
+
+    time.sleep(2)
+    print 'start plotting'
+    live_charting = livecharting.LiveCharting(n_curves=ps.N_ACTIONS,
+                                              ymin=-1.0,
+                                              ymax=3.5,
+                                              ylabel='Q-values',
+                                              data_labels=ps.ACTION_NAMES,
+                                              x_resolution=50)
+    plt.show()

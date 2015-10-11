@@ -1,6 +1,6 @@
 """params.py: Network protocol settings and parameters for Q-Learner."""
 
-# --- Random numbers ---
+# --- Random number generation ---
 PRNG_SEED = 1234567890
 
 # --- Save and load ---
@@ -11,14 +11,15 @@ LABELING_NETWORK_FILE_NAME = 'saved-nns/best_encoder_bigdata'
 
 
 # --- Q-Learner settings ---
-MB_SIZE = 10
+MB_SIZE = 20
 EXP_STORE_SIZE = 50000
-PERCEPT_LENGTH = 25
+PERCEPT_LENGTH = 25 # 64*64*3
 N_ACTIONS = 3
+ACTION_NAMES = ['left', 'straight', 'right']
 STATE_STM = 4
 GAMMA = 0.98
-LEARNING_RATE = 0.0004
-LEARNING_ITERATIONS_PER_STEP = 80
+LEARNING_RATE = 0.0020
+LEARNING_ITERATIONS_PER_STEP = 10
 BURN_IN = 50
 
 EPSILON_START = 1.00
@@ -26,7 +27,7 @@ EPSILON_END = 0.00
 EPSILON_DECREASE_DURATION = 20*60*30
 
 # Duration of random action (number of frames)
-RANDOM_ACTION_DURATION = 45
+RANDOM_ACTION_DURATION = 20
 
 Q_HIDDEN_NEURONS = 200
 
