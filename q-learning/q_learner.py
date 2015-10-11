@@ -68,13 +68,12 @@ class QLearner(object):
         self.minibatch_size = minibatch_size
         self.prng = prng
 
-        self.exp_store_percepts = np.zeros((exp_store_size, percept_length), 
+        self.exp_store_percepts = np.zeros((exp_store_size, percept_length),
                                            dtype=floatX)
         self.exp_store_rewards = np.zeros((exp_store_size,), dtype=floatX)
         self.exp_store_actions = np.zeros((exp_store_size,), dtype='int32')
         self.exp_counter = 0
         self.exp_store_current_size = 0
-
 
     def add_observation(self, percept, previous_action, reward):
         """Adds an observation to the learners experience store.
@@ -242,12 +241,12 @@ class QNetwork(object):
         params = [param for layer in self.layers for param in layer.params]
         cost = self.get_cost()
         grads = T.grad(cost, params)
-        updates = [(param, param - learning_rate*grad) 
+        updates = [(param, param - learning_rate*grad)
                    for param, grad in zip(params, grads)]
-        self.train = theano.function([self.inpt, 
-                                      self.actions, 
-                                      self.target_qs, 
-                                      learning_rate], 
+        self.train = theano.function([self.inpt,
+                                      self.actions,
+                                      self.target_qs,
+                                      learning_rate],
                                      cost,
                                      updates=updates)
         self.output_fn = theano.function([self.inpt], self.output)

@@ -28,7 +28,7 @@ class LiveBarPlotter(object):
 
     def update(self, data):
         for chart, ds in zip(self.charts, data.reshape(self.n_bars_per_category,
-                                                     self.n_categories)):
+                                                       self.n_categories)):
             for rect, d in zip(chart, ds):
                 rect.set_height(d)
         self.chart_fig.canvas.draw()

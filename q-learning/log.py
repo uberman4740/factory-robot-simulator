@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+
+"""log.py: Simple custom logging."""
+
+
 import time
 
 start_time = time.time()
