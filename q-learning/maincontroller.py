@@ -139,6 +139,8 @@ class MainController(object):
     def remember_percept(self, percept, last_action, previous_reward):
         """Encode raw percept and pass encoding, last action and reward to Q-Learner."""
         encoding = self.state_encoder_fn(percept)
+        if encoding_charting is not None:
+            encoding_charting.set_values(0, encoding[5:10])
         self.q_learner.add_observation(encoding.astype(np.float32),
                                        last_action,
                                        previous_reward)
@@ -271,6 +273,7 @@ def main():
 if __name__ == '__main__':
     q_charting = None
     error_charting = None
+    encoding_charting = None
 
     anim_thread = threading.Thread(target=main)
     anim_thread.daemon = True
@@ -278,21 +281,28 @@ if __name__ == '__main__':
 
     time.sleep(2)
     print 'start plotting'
-    q_charting = pyqtlivecharting.LiveCharting(n_curves=ps.N_ACTIONS,
+    q_charting = pyqtlivecharting.LiveChartingLines(n_curves=ps.N_ACTIONS,
                                                y_min=-1.0,
                                                y_max=5.0,
                                                curve_width=4,
                                                steps=300,
                                                title='Q-values',
                                                ylabel='q-value')
-    error_charting = pyqtlivecharting.LiveCharting(n_curves=1,
+    error_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
                                                    y_min=0,
                                                    y_max=2.0,
                                                    curve_width=2,
                                                    steps=600,
                                                    title='Training error',
                                                    ylabel='mean error')
-    pyqtlivecharting.LiveCharting.run()
+    encoding_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
+                                                   y_min=0,
+                                                   y_max=1.0,
+                                                   curve_width=5,
+                                                   steps=5,
+                                                   title='Encoding',
+                                                   ylabel='signal')
+    pyqtlivecharting.LiveChartingLines.run()
 
     # livecharting.LiveCharting(n_curves=ps.N_ACTIONS,
     #                           ymin=-1.0,
