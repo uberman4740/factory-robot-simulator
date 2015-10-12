@@ -46,6 +46,7 @@ plots/
 **/saved-pcas/*
 **/pickled*
 **/exp-store-logs/*
+**/training-logs/*
 
 # IDE files
 .idea/

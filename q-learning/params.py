@@ -52,6 +52,10 @@ IMAGE_WIDTH = 64
 TRAIN_ERROR_SMOOTHING = 0.9
 
 
+# --- Log path ---
+LOG_PATH = 'training-logs/'
+
+
 # --- Network settings ---
 IN_IP = "0.0.0.0"
 IN_PORT = 8888

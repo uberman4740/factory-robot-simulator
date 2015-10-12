@@ -5,6 +5,8 @@
 import socket
 import time
 import threading
+import os
+import shutil
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,7 +45,9 @@ class MainController(object):
                  extensions=[],  # plotting, etc
                  frame_counter_increment=1,
                  prng=None,
-                 training_error_smoothing=0.0):
+                 training_error_smoothing=0.0,
+                 log_path=None,
+                 log_write_period=1000):
         self.frame_counter = 0
         self.total_steps = 0
         self.frame_counter_increment = frame_counter_increment
@@ -73,12 +77,16 @@ class MainController(object):
         self.current_total_reward = 0
         self.smooth_training_error = 0.0
         self.training_error_smoothing = training_error_smoothing
+        self.log_path = log_path
+        self.log_write_period = log_write_period
+        self.rewards_log = []
+
 
     def do(self):
         """Check for data receipt and send decisions to remote host. """
         if self.current_state == MainController.RECEIVE:
             if self.timeout():
-                log('Timeout.')
+                log('Timeout.', 1)
                 self.current_state = MainController.SEND
             else:
                 data = inputlistener.collect_current_data()
@@ -89,10 +97,16 @@ class MainController(object):
                     if self.sensor_decoder.state_info_complete():
                         percept, prev_action, total_reward = self.sensor_decoder. \
                             get_current_data()
+                        differential_reward = total_reward - self.current_total_reward
                         self.remember_percept(percept,
                                               prev_action,
-                                              total_reward - self.current_total_reward)
+                                              differential_reward)
                         self.current_total_reward = total_reward
+                        self.rewards_log.append(differential_reward)
+                        if (self.total_steps % self.log_write_period) == 0:
+                            append_to_log(self.log_path + 'rewards.log', self.rewards_log)
+                            self.rewards_log = []
+
                         self.current_decision = self.get_decision()
                         self.advance_frame()
                         self.current_state = MainController.SEND
@@ -115,7 +129,6 @@ class MainController(object):
             self.current_state = MainController.LEARN
 
         if self.current_state == MainController.LEARN:
-            log('Training...')
             if self.total_steps > self.burn_in:
                 mean_error = 0.0
                 for i in xrange(self.learning_iterations_per_step):
@@ -132,8 +145,8 @@ class MainController(object):
                         q_charting.set_current_value(i, q)
                 if error_charting is not None:
                     error_charting.set_current_value(0, self.smooth_training_error)
-
-            log('Training steps completed.')
+                if (self.total_steps % self.log_write_period) == 0:
+                    self.q_learner.q_function.save_as_file(self.log_path + 'q_function')
             self.current_state = MainController.RECEIVE
 
     def remember_percept(self, percept, last_action, previous_reward):
@@ -217,6 +230,20 @@ def load_q_network(filename, state_stm, percept_length,
         return QNetwork([hidden_layer, output_layer], minibatch_size=mb_size)
 
 
+def append_to_log(filepath, values):
+    if not os.path.exists(os.path.dirname(filepath)):
+        os.makedirs(os.path.dirname(filepath))
+    with open(filepath, 'a') as file:
+        for value in values:
+            file.write(str(value) + '\n')
+
+
+def copy_parameter_file(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    shutil.copy2(ps.__file__[:-1], path)
+
+
 def main():
     prng = np.random.RandomState(ps.PRNG_SEED)
     sensor_decoder = SensorDecoder(n_fragments=ps.N_FRAGMENTS,
@@ -249,6 +276,8 @@ def main():
                          minibatch_size=ps.MB_SIZE,
                          prng=prng)
 
+    log_path = ps.LOG_PATH + time.strftime('%Y-%m-%d_%H-%M-%S') + '/'
+    copy_parameter_file(log_path)
     main_controller = MainController(q_learner,
                                      sensor_decoder=sensor_decoder,
                                      state_encoder_fn=state_encoder_fn,
@@ -264,7 +293,8 @@ def main():
                                      burn_in=ps.BURN_IN,
                                      frame_counter_increment=ps.FRAME_COUNTER_INC_STEP,
                                      prng=prng,
-                                     training_error_smoothing=ps.TRAIN_ERROR_SMOOTHING)
+                                     training_error_smoothing=ps.TRAIN_ERROR_SMOOTHING,
+                                     log_path=log_path)
     print 'Starting main loop.'
     while 1:
         main_controller.do()
