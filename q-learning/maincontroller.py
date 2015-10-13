@@ -47,7 +47,8 @@ class MainController(object):
                  prng=None,
                  training_error_smoothing=0.0,
                  log_path=None,
-                 log_write_period=1000):
+                 log_write_period=1000,
+                 reward_smoothing=0.0):
         self.frame_counter = 0
         self.total_steps = 0
         self.frame_counter_increment = frame_counter_increment
@@ -80,7 +81,8 @@ class MainController(object):
         self.log_path = log_path
         self.log_write_period = log_write_period
         self.rewards_log = []
-
+        self.smooth_reward = 0.0
+        self.reward_smoothing = reward_smoothing
 
     def do(self):
         """Check for data receipt and send decisions to remote host. """
@@ -106,6 +108,10 @@ class MainController(object):
                         if (self.total_steps % self.log_write_period) == 0:
                             append_to_log(self.log_path + 'rewards.log', self.rewards_log)
                             self.rewards_log = []
+                        self.smooth_reward = (self.reward_smoothing * self.smooth_reward +
+                                              (1 - self.reward_smoothing) * differential_reward)
+                        if smooth_reward_charting is not None:
+                            smooth_reward_charting.set_current_value(0, 30.0*self.smooth_reward)
 
                         self.current_decision = self.get_decision()
                         self.advance_frame()
@@ -136,7 +142,7 @@ class MainController(object):
                     mean_error = 1. * i * mean_error / (i + 1) + 1. * err / (i + 1)
                 self.smooth_training_error = ((1 - self.training_error_smoothing) * mean_error
                                               + self.training_error_smoothing *
-                                                self.smooth_training_error)
+                                              self.smooth_training_error)
 
                 current_qs = self.q_learner.get_current_qs()
                 # log('qs: {0}'.format(current_qs), 1)
@@ -210,8 +216,12 @@ class MainController(object):
         self.total_steps += 1
 
 
-def load_labeling_function(filename, mb_size):
-    return Network.load_from_file(filename, mb_size)
+def load_labeling_function(filename, mb_size, use_layer=None):
+    net = Network.load_from_file(filename, mb_size)
+    if use_layer is not None:
+        net.single_output = net.layers[use_layer].single_output
+        net.output = net.layers[use_layer].output
+    return net
 
 
 def load_q_network(filename, state_stm, percept_length,
@@ -241,7 +251,7 @@ def append_to_log(filepath, values):
 def copy_parameter_file(path):
     if not os.path.exists(path):
         os.makedirs(path)
-    shutil.copy2(ps.__file__[:-1], path)
+    shutil.copy2('params.py', path)
 
 
 def main():
@@ -257,7 +267,8 @@ def main():
                                    n_reward_bytes=ps.N_REWARD_BYTES)
 
     labeling_net = load_labeling_function(ps.LABELING_NETWORK_FILE_NAME,
-                                          ps.MB_SIZE)
+                                          ps.MB_SIZE,
+                                          ps.LABELING_NETWORK_USE_LAYER)
     state_encoder_fn = labeling_net.get_single_output
 
     q_function = load_q_network(ps.Q_NETWORK_LOAD_FILENAME,
@@ -294,7 +305,8 @@ def main():
                                      frame_counter_increment=ps.FRAME_COUNTER_INC_STEP,
                                      prng=prng,
                                      training_error_smoothing=ps.TRAIN_ERROR_SMOOTHING,
-                                     log_path=log_path)
+                                     log_path=log_path,
+                                     reward_smoothing=ps.REWARD_SMOOTHING)
     print 'Starting main loop.'
     while 1:
         main_controller.do()
@@ -304,6 +316,7 @@ if __name__ == '__main__':
     q_charting = None
     error_charting = None
     encoding_charting = None
+    smooth_reward_charting = None
 
     anim_thread = threading.Thread(target=main)
     anim_thread.daemon = True
@@ -332,6 +345,13 @@ if __name__ == '__main__':
                                                    steps=5,
                                                    title='Encoding',
                                                    ylabel='signal')
+    smooth_reward_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
+                                                                y_min=-1.0,
+                                                                y_max=1.0,
+                                                                curve_width=3,
+                                                                steps=5000,
+                                                                title='Reward',
+                                                                ylabel='reward')
     pyqtlivecharting.LiveChartingLines.run()
 
     # livecharting.LiveCharting(n_curves=ps.N_ACTIONS,
