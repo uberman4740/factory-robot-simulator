@@ -44,6 +44,7 @@ from theano.tensor.nnet import softmax
 from theano.tensor import shared_randomstreams
 from theano.tensor.signal import downsample
 import scipy.misc
+import time
 
 # Activation functions for neurons
 def linear(z): return z
@@ -71,54 +72,54 @@ else:
           "network3.py to set\nthe GPU flag to True."
 
 
-def load_labeling_data(filename, lower, upper, mask=-1):    
+def load_labeling_data(filename, lower, upper, mask=-1):
     labels = open(filename)
     lines = labels.readlines()[lower:upper]
     labels.close()
     data = np.asarray([[float(d) for d in l.split(',')[:-1]] for l in lines])
 
     if not mask == -1:
-        data = data[:, 5*mask: 5*(mask+1)]
-        return data.reshape(upper-lower, 5)
+        data = data[:, 5 * mask: 5 * (mask + 1)]
+        return data.reshape(upper - lower, 5)
     else:
-        return data.reshape(upper-lower, 5*5)
-
+        return data.reshape(upper - lower, 5 * 5)
 
 
 def load_training_img(index, file_path, file_prefix):
-    return scipy.misc.imread(file_path + file_prefix + str(index).zfill(6) + '.png')[:,:,:-1]
+    return scipy.misc.imread(file_path + file_prefix + str(index).zfill(6) + '.png')[:, :, :-1]
+
 
 def load_images(lower, upper, file_path, file_prefix):
-    return np.asarray([load_training_img(i, file_path, file_prefix) 
-                        for i in range(lower, upper)])
+    return np.asarray([load_training_img(i, file_path, file_prefix)
+                       for i in range(lower, upper)])
+
 
 def normalize_and_flatten(imgs):
-    return (imgs / 255.0).reshape(imgs.shape[0], imgs.shape[1]*imgs.shape[2]*imgs.shape[3])
-
+    return (imgs / 255.0).reshape(imgs.shape[0], imgs.shape[1] * imgs.shape[2] * imgs.shape[3])
 
 
 #### Load the Image data
 def load_data_shared(file_path_images,
                      file_prefix_images,
-                     filename_labels, 
-                     n_train=1000, 
-                     n_validation=300, 
+                     filename_labels,
+                     n_train=1000,
+                     n_validation=300,
                      n_test=200,
                      label_mask=-1):
-    
-    training_images   = normalize_and_flatten(load_images(0, n_train, file_path_images, file_prefix_images))
-    validation_images = normalize_and_flatten(load_images(n_train, n_train+n_validation, file_path_images, file_prefix_images))
-    test_images       = normalize_and_flatten(load_images(n_train+n_validation, n_train+n_validation+n_test, file_path_images, file_prefix_images))
-    
-    training_labels   = load_labeling_data(filename_labels, 0, n_train, label_mask)
-    validation_labels = load_labeling_data(filename_labels, n_train, n_train+n_validation, label_mask)
-    test_labels       = load_labeling_data(filename_labels, n_train+n_validation, n_train+n_validation+n_test, label_mask)
+    training_images = normalize_and_flatten(load_images(0, n_train, file_path_images, file_prefix_images))
+    validation_images = normalize_and_flatten(
+        load_images(n_train, n_train + n_validation, file_path_images, file_prefix_images))
+    test_images = normalize_and_flatten(
+        load_images(n_train + n_validation, n_train + n_validation + n_test, file_path_images, file_prefix_images))
 
-    training_data   = (training_images, training_labels)
+    training_labels = load_labeling_data(filename_labels, 0, n_train, label_mask)
+    validation_labels = load_labeling_data(filename_labels, n_train, n_train + n_validation, label_mask)
+    test_labels = load_labeling_data(filename_labels, n_train + n_validation, n_train + n_validation + n_test,
+                                     label_mask)
+
+    training_data = (training_images, training_labels)
     validation_data = (validation_images, validation_labels)
-    test_data       = (test_images, test_labels)
-    
-    
+    test_data = (test_images, test_labels)
 
     def shared(data):
         """Place the data into shared variables.  This allows Theano to copy
@@ -132,6 +133,19 @@ def load_data_shared(file_path_images,
         return shared_x, shared_y
 
     return [shared(training_data), shared(validation_data), shared(test_data)]
+
+
+def RMSProp(cost, params, lr=0.001, rho=0.9, epsilon=1e-6, step_rate=1.0):
+    grads = T.grad(cost=cost, wrt=params)
+    updates = []
+    for p, g in zip(params, grads):
+        acc = theano.shared(p.get_value() * 0.)
+        acc_new = rho * acc + (1 - rho) * g ** 2
+        gradient_scaling = T.sqrt(acc_new + epsilon)
+        g = step_rate * g / gradient_scaling
+        updates.append((acc, acc_new))
+        updates.append((p, p - lr * g))
+    return updates
 
 
 #### Main class used to construct and train networks
@@ -158,11 +172,10 @@ class Network(object):
                 prev_layer.output, prev_layer.output_dropout, self.mini_batch_size)
             layer.set_single_inpt(
                 prev_layer.single_output)
-            
+
         self.output = self.layers[-1].output
         self.output_dropout = self.layers[-1].output_dropout
         self.single_output = self.layers[-1].single_output
-
 
     def save_as_file(self, filename_prefix):
         # save all layers
@@ -172,7 +185,7 @@ class Network(object):
                 os.remove(filename)
             except OSError:
                 print 'Creating file', filename
-            
+
             f = file(filename, 'wb')
             cPickle.dump(layer, f, protocol=cPickle.HIGHEST_PROTOCOL)
             f.close()
@@ -180,8 +193,6 @@ class Network(object):
         while os.path.isfile(filename + '_layer' + str(i) + '.save'):
             os.remove(filename + '_layer' + str(i) + '.save')
             i += 1
-
-        
 
     @classmethod
     def load_from_file(cls, filename, mini_batch_size):
@@ -202,13 +213,12 @@ class Network(object):
         print 'Loading network:', len(layers), 'layers loaded.'
         return cls(layers, mini_batch_size)
 
-
-
     def get_single_output(self, input_to_classify):
         return self.single_output.eval({self.x_single: input_to_classify})
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
-            validation_data, test_data, best_file_name=None, lmbda=0.0, learning_curve_file_name=None):
+            validation_data, test_data, best_file_name=None, lmbda=0.0, learning_curve_file_name=None,
+            rmsprop=None):
         """Train the network using mini-batch stochastic gradient descent."""
         training_x, training_y = training_data
         validation_x, validation_y = validation_data
@@ -224,7 +234,14 @@ class Network(object):
         cost = self.layers[-1].cost(self) + \
                0.5 * lmbda * l2_norm_squared / num_training_batches
         grads = T.grad(cost, self.params)
-        updates = [(param, param - eta * grad)
+        if rmsprop is not None:
+            updates = RMSProp(cost, self.params,
+                              lr=rmsprop[0],
+                              rho=rmsprop[1],
+                              epsilon=rmsprop[2],
+                              step_rate=rmsprop[3])
+        else:
+            updates = [(param, param - eta * grad)
                    for param, grad in zip(self.params, grads)]
 
         # define functions to train a mini-batch, and to compute the
@@ -267,9 +284,11 @@ class Network(object):
         best_validation_accuracy = float('-inf')
         training_set_costs = []
         for epoch in xrange(epochs):
+            print('Epoch {0}: '.format(epoch))
+            epoch_start_time = time.time()
             if training_set_costs:
                 print '  training error:   {1}'.format(epoch, np.mean(training_set_costs))
-            
+
             if learning_curve_file_name:
                 with open(learning_curve_file_name + 'train_costs.lcurve', "a") as f:
                     f.write(str(np.mean(training_set_costs)) + '\n')
@@ -277,8 +296,8 @@ class Network(object):
             training_set_costs = []
             for minibatch_index in xrange(num_training_batches):
                 iteration = num_training_batches * epoch + minibatch_index
-                if iteration % 1000 == 0:
-                    print("--- Training mini-batch number {0}".format(iteration) + " ---")
+                # if iteration % 1000 == 0:
+                #     print("--- Training mini-batch number {0}".format(iteration) + " ---")
 
                 cost_ij = train_mb(minibatch_index)
                 training_set_costs.append(cost_ij)
@@ -286,12 +305,10 @@ class Network(object):
                 if (iteration + 1) % num_training_batches == 0:
                     validation_accuracy = np.mean(
                         [validate_mb_accuracy(j) for j in xrange(num_validation_batches)])
-                    print('Epoch {0}: '.format(epoch))
                     print('  validation error: {0:.5}'.format(validation_accuracy))
                     if learning_curve_file_name:
                         with open(learning_curve_file_name + 'validation_accuracies.lcurve', "a") as f:
                             f.write(str(-validation_accuracy) + '\n')
-
 
                     if validation_accuracy >= best_validation_accuracy:
                         if best_file_name:
@@ -305,6 +322,8 @@ class Network(object):
                                 [test_mb_accuracy(j) for j in xrange(num_test_batches)])
                             print('  test error:        {0:.5}'.format(
                                 -test_accuracy))
+            print 'Epoch time: {0:.4}s'.format(time.time() - epoch_start_time)
+            print '------------------'
         print("Finished training network.")
         print("Best validation accuracy of {0:.5} obtained at iteration {1}".format(
             best_validation_accuracy, best_iteration))
@@ -357,9 +376,9 @@ class ConvPoolLayer(object):
         self.params = [self.w, self.b]
 
     def __getstate__(self):
-        return (self.filter_shape, 
-                self.image_shape, 
-                self.poolsize, 
+        return (self.filter_shape,
+                self.image_shape,
+                self.poolsize,
                 self.activation_fn,
                 self.w.get_value(borrow=True),
                 self.b.get_value(borrow=True))
@@ -373,7 +392,6 @@ class ConvPoolLayer(object):
         self.w = theano.shared(np.asarray(state[4], dtype=theano.config.floatX), borrow=True)
         self.b = theano.shared(np.asarray(state[5], dtype=theano.config.floatX), borrow=True)
         self.params = [self.w, self.b]
-
 
     def set_inpt(self, inpt, inpt_dropout, mini_batch_size):
         self.inpt = inpt.reshape(self.image_shape)
@@ -410,21 +428,21 @@ class FullyConnectedLayer(object):
                 # np.random.normal(
                 #     loc=0.0, scale=np.sqrt(1.0 / n_out), size=(n_in, n_out)),
                 np.random.uniform(
-                    -np.sqrt(6.0/(n_in + n_out)), np.sqrt(6.0/(n_in + n_out)), size=(n_in, n_out)),
-                    
+                    -np.sqrt(6.0 / (n_in + n_out)), np.sqrt(6.0 / (n_in + n_out)), size=(n_in, n_out)),
+
                 dtype=theano.config.floatX),
             name='w', borrow=True)
         self.b = theano.shared(
             np.asarray(
                 # np.random.normal(loc=0.0, scale=1.0, size=(n_out,)),
-                 np.zeros((n_out,)),      
+                np.zeros((n_out,)),
                 dtype=theano.config.floatX),
             name='b', borrow=True)
         self.params = [self.w, self.b]
 
     def __getstate__(self):
-        return (self.n_in, 
-                self.n_out, 
+        return (self.n_in,
+                self.n_out,
                 self.activation_fn,
                 self.p_dropout,
                 self.w.get_value(borrow=True),
@@ -449,7 +467,7 @@ class FullyConnectedLayer(object):
             T.dot(self.inpt_dropout, self.w) + self.b)
 
     def set_single_inpt(self, inpt):
-        self.single_inpt = inpt.reshape((self.n_in, ))
+        self.single_inpt = inpt.reshape((self.n_in,))
         self.single_output = self.activation_fn(
             (1 - self.p_dropout) * T.dot(self.single_inpt, self.w) + self.b)
 
@@ -470,9 +488,8 @@ class FullyConnectedLayer(object):
         # return -T.mean(T.log(self.output_dropout)[T.arange(net.y.shape[0]), net.y])
 
 
-
 class SparseLayer(object):
-#     def __init__(self, n_in, n_out, activation_fn=sigmoid, p_dropout=0.0):
+    #     def __init__(self, n_in, n_out, activation_fn=sigmoid, p_dropout=0.0):
     def __init__(self, from_shape, to_shape, tiles, activation_fn=sigmoid):
         self.from_shape = from_shape
         self.to_shape = to_shape
@@ -483,109 +500,109 @@ class SparseLayer(object):
         self.n_in = n_from_shape * n_tiles
         self.n_out = n_to_shape * n_tiles
         self.activation_fn = activation_fn
-        
+
         # Initialize weights and biases
         self.ws = [theano.shared(
-                        np.asarray(
-                            np.random.uniform(
-                                -np.sqrt(6.0/(n_from_shape + n_to_shape)), np.sqrt(6.0/(n_from_shape + n_to_shape)), 
-                                    size=(n_from_shape, n_to_shape)),
-                            dtype=theano.config.floatX),
-                        name='w'+str(i)+','+str(j), borrow=True)
-                    for i in xrange(tiles[0]) for j in xrange(tiles[1])]
+            np.asarray(
+                np.random.uniform(
+                    -np.sqrt(6.0 / (n_from_shape + n_to_shape)), np.sqrt(6.0 / (n_from_shape + n_to_shape)),
+                    size=(n_from_shape, n_to_shape)),
+                dtype=theano.config.floatX),
+            name='w' + str(i) + ',' + str(j), borrow=True)
+                   for i in xrange(tiles[0]) for j in xrange(tiles[1])]
         self.b = theano.shared(
             np.asarray(
-                np.zeros((self.n_out,)),      
+                np.zeros((self.n_out,)),
                 dtype=theano.config.floatX),
             name='b', borrow=True)
         self.params = self.ws + [self.b]
 
-#     def __getstate__(self):
-#         return (self.n_in, 
-#                 self.n_out, 
-#                 self.activation_fn,
-#                 self.p_dropout,
-#                 self.w.get_value(borrow=True),
-#                 self.b.get_value(borrow=True))
+    #     def __getstate__(self):
+    #         return (self.n_in,
+    #                 self.n_out,
+    #                 self.activation_fn,
+    #                 self.p_dropout,
+    #                 self.w.get_value(borrow=True),
+    #                 self.b.get_value(borrow=True))
 
-#     def __setstate__(self, state):
-#         self.n_in = state[0]
-#         self.n_out = state[1]
-#         self.activation_fn = state[2]
-#         self.p_dropout = state[3]
-#         self.w = theano.shared(np.asarray(state[4], dtype=theano.config.floatX), borrow=True)
-#         self.b = theano.shared(np.asarray(state[5], dtype=theano.config.floatX), borrow=True)
-#         self.params = [self.w, self.b]
+    #     def __setstate__(self, state):
+    #         self.n_in = state[0]
+    #         self.n_out = state[1]
+    #         self.activation_fn = state[2]
+    #         self.p_dropout = state[3]
+    #         self.w = theano.shared(np.asarray(state[4], dtype=theano.config.floatX), borrow=True)
+    #         self.b = theano.shared(np.asarray(state[5], dtype=theano.config.floatX), borrow=True)
+    #         self.params = [self.w, self.b]
 
     def set_inpt(self, inpt, inpt_dropout, mini_batch_size):
         inpt_height = self.from_shape[0] * self.tiles[0]
         inpt_width = self.from_shape[1] * self.tiles[1]
         output_height = self.to_shape[0] * self.tiles[0]
         output_width = self.to_shape[1] * self.tiles[1]
-        
+
         self.inpt = inpt.reshape((mini_batch_size, inpt_height, inpt_width))
         shaped_output = T.zeros((mini_batch_size, output_height, output_width))
         for i in xrange(self.tiles[0]):
             for j in xrange(self.tiles[1]):
-                inpt_tile = self.inpt[:, 
-                              i*self.from_shape[1]:(i+1)*self.from_shape[1],
-                              j*self.from_shape[0]:(j+1)*self.from_shape[0]] \
-                              .reshape((mini_batch_size, self.from_shape[0] * self.from_shape[1],))
+                inpt_tile = self.inpt[:,
+                            i * self.from_shape[1]:(i + 1) * self.from_shape[1],
+                            j * self.from_shape[0]:(j + 1) * self.from_shape[0]] \
+                    .reshape((mini_batch_size, self.from_shape[0] * self.from_shape[1],))
 
-
-                output_tile_flat = self.activation_fn(T.dot(inpt_tile, self.ws[i*self.tiles[1] + j])) 
+                output_tile_flat = self.activation_fn(T.dot(inpt_tile, self.ws[i * self.tiles[1] + j]))
                 output_tile = T.reshape(output_tile_flat, (mini_batch_size, self.to_shape[0], self.to_shape[1]))
-                shaped_output = T.set_subtensor(shaped_output[:, 
-                                            i*self.to_shape[0]:(i+1)*self.to_shape[0],
-                                            j*self.to_shape[1]:(j+1)*self.to_shape[1]], 
-                                output_tile)
-        
+                shaped_output = T.set_subtensor(shaped_output[:,
+                                                i * self.to_shape[0]:(i + 1) * self.to_shape[0],
+                                                j * self.to_shape[1]:(j + 1) * self.to_shape[1]],
+                                                output_tile)
+
         self.output = T.reshape(shaped_output, (mini_batch_size, self.n_out)) + self.b
-#         self.inpt_dropout = dropout_layer(
-#             inpt_dropout.reshape((mini_batch_size, self.n_in)), self.p_dropout)
-#         self.output_dropout = self.activation_fn(
-#             T.dot(self.inpt_dropout, self.w) + self.b)
-        self.output_dropout = self.output #TODO
+        #         self.inpt_dropout = dropout_layer(
+        #             inpt_dropout.reshape((mini_batch_size, self.n_in)), self.p_dropout)
+        #         self.output_dropout = self.activation_fn(
+        #             T.dot(self.inpt_dropout, self.w) + self.b)
+        self.output_dropout = self.output  # TODO
 
     def set_single_inpt(self, inpt):
         inpt_height = self.from_shape[0] * self.tiles[0]
         inpt_width = self.from_shape[1] * self.tiles[1]
         output_height = self.to_shape[0] * self.tiles[0]
         output_width = self.to_shape[1] * self.tiles[1]
-        
+
         self.single_inpt = inpt.reshape((inpt_height, inpt_width))
         shaped_output = T.zeros((output_height, output_width))
         for i in xrange(self.tiles[0]):
             for j in xrange(self.tiles[1]):
-                inpt_tile = self.single_inpt[ 
-                              i*self.from_shape[1]:(i+1)*self.from_shape[1],
-                              j*self.from_shape[0]:(j+1)*self.from_shape[0]] \
-                              .flatten()
+                inpt_tile = self.single_inpt[
+                            i * self.from_shape[1]:(i + 1) * self.from_shape[1],
+                            j * self.from_shape[0]:(j + 1) * self.from_shape[0]] \
+                    .flatten()
 
-                output_tile_flat = self.activation_fn(T.dot(inpt_tile, self.ws[i*self.tiles[1] + j]))
+                output_tile_flat = self.activation_fn(T.dot(inpt_tile, self.ws[i * self.tiles[1] + j]))
 
                 # output_tile = T.reshape(output_tile_flat, self.to_shape)
                 output_tile = T.reshape(output_tile_flat, (self.to_shape[0], self.to_shape[1]))
 
                 shaped_output = T.set_subtensor(shaped_output[
-                                            i*self.to_shape[0]:(i+1)*self.to_shape[0],
-                                            j*self.to_shape[1]:(j+1)*self.to_shape[1]],
-                                output_tile)
-        
-        self.single_output = T.reshape(shaped_output, (self.n_out,)) + self.b        
-#         self.single_inpt = inpt.reshape((self.n_in, ))
-#         self.single_output = self.activation_fn(
-#             (1 - self.p_dropout) * T.dot(self.single_inpt, self.w) + self.b)
-        
+                                                i * self.to_shape[0]:(i + 1) * self.to_shape[0],
+                                                j * self.to_shape[1]:(j + 1) * self.to_shape[1]],
+                                                output_tile)
+
+        self.single_output = T.reshape(shaped_output, (self.n_out,)) + self.b
+
+    #         self.single_inpt = inpt.reshape((self.n_in, ))
+    #         self.single_output = self.activation_fn(
+    #             (1 - self.p_dropout) * T.dot(self.single_inpt, self.w) + self.b)
+
 
     def accuracy(self, y):
         "Return the accuracy for the mini-batch."
         return -T.mean((self.output - y) ** 2)
 
-
     def cost(self, net):
         "Return the cost."
         return T.mean((self.output_dropout - net.y) ** 2)
+
 
 #### Miscellanea
 def size(data):
