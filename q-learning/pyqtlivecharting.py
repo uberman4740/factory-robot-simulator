@@ -36,9 +36,12 @@ class LiveChartingLines(object):
                  curve_width=3,
                  steps=400,
                  title=None,
-                 ylabel=None):
+                 ylabel=None,
+                 rightaxis=True):
         self.steps = steps
         self.p = pg.plot()
+        if rightaxis:
+            self.p.showAxis('right')
         if title is not None:
             self.p.setWindowTitle(title)
         self.p.setRange(QtCore.QRectF(0, y_min, self.steps, y_max - y_min))
