@@ -72,17 +72,17 @@ else:
           "network3.py to set\nthe GPU flag to True."
 
 
-def load_labeling_data(filename, lower, upper, mask=-1):
+def load_labeling_data(filename, lower, upper, mask=-1, n_direction_sensors=5, n_classes=5):
     labels = open(filename)
     lines = labels.readlines()[lower:upper]
     labels.close()
     data = np.asarray([[float(d) for d in l.split(',')[:-1]] for l in lines])
 
     if not mask == -1:
-        data = data[:, 5 * mask: 5 * (mask + 1)]
-        return data.reshape(upper - lower, 5)
+        data = data[:, n_direction_sensors * mask: n_direction_sensors * (mask + 1)]
+        return data.reshape(upper - lower, n_direction_sensors)
     else:
-        return data.reshape(upper - lower, 5 * 5)
+        return data.reshape(upper - lower, n_direction_sensors * n_classes)
 
 
 def load_training_img(index, file_path, file_prefix):

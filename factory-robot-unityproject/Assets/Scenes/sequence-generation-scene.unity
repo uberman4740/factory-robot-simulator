@@ -167,7 +167,7 @@ MonoBehaviour:
   recordCategoryTags:
   - Pickup
   - Building
-  trainingFilePath: /Users/an/dev-repos/factory-robot-data/imgs_2015-10-15/
+  trainingFilePath: /Users/an/dev-repos/factory-robot-data/imgs_2015-10-17/
   labelFileName: labels.dat
   captureFilePrefix: capture
   actionFileName: actions.dat
@@ -957,7 +957,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &689155745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1720,7 +1720,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   drivingSpeed: 2.20000005
   turningSpeed: 70
-  deltaTime: .0350000001
+  deltaTime: .0700000003
   actionDurationLower: 8
   actionDurationUpper: 50
   currentAction: 0
