@@ -45,6 +45,7 @@ from theano.tensor import shared_randomstreams
 from theano.tensor.signal import downsample
 import scipy.misc
 import time
+import matplotlib.colors
 
 # Activation functions for neurons
 def linear(z): return z
@@ -85,17 +86,28 @@ def load_labeling_data(filename, lower, upper, mask=-1, n_direction_sensors=5, n
         return data.reshape(upper - lower, n_direction_sensors * n_classes)
 
 
-def load_training_img(index, file_path, file_prefix):
-    return scipy.misc.imread(file_path + file_prefix + str(index).zfill(6) + '.png')[:, :, :-1]
+def load_training_img(index, file_path, file_prefix, hsv=None):
+    if hsv is None:
+        return 1.0 * scipy.misc.imread(file_path + file_prefix + str(index).zfill(6) + '.png')[:, :, :-1] / 255.0
+    else:
+        return matplotlib.colors.rgb_to_hsv(
+            1.0 * scipy.misc.imread(file_path + file_prefix + str(index).zfill(6) + '.png')[:, :, :-1] / 255.0)
 
 
-def load_images(lower, upper, file_path, file_prefix):
-    return np.asarray([load_training_img(i, file_path, file_prefix)
+def load_images(lower, upper, file_path, file_prefix, hsv=None):
+    return np.asarray([load_training_img(i, file_path, file_prefix, hsv)
                        for i in range(lower, upper)])
 
 
-def normalize_and_flatten(imgs):
-    return (imgs / 255.0).reshape(imgs.shape[0], imgs.shape[1] * imgs.shape[2] * imgs.shape[3])
+def flatten_imgs(imgs):
+    return imgs.reshape(imgs.shape[0], imgs.shape[1] * imgs.shape[2] * imgs.shape[3])
+
+
+def shuffle_data(data, rng):
+    xs, ts = data
+    index_set = np.asarray(range(len(xs)))
+    rng.shuffle(index_set)
+    return xs[index_set], ts[index_set]
 
 
 #### Load the Image data
@@ -105,21 +117,54 @@ def load_data_shared(file_path_images,
                      n_train=1000,
                      n_validation=300,
                      n_test=200,
-                     label_mask=-1):
-    training_images = normalize_and_flatten(load_images(0, n_train, file_path_images, file_prefix_images))
-    validation_images = normalize_and_flatten(
-        load_images(n_train, n_train + n_validation, file_path_images, file_prefix_images))
-    test_images = normalize_and_flatten(
-        load_images(n_train + n_validation, n_train + n_validation + n_test, file_path_images, file_prefix_images))
+                     label_mask=-1,
+                     n_direction_sensors=5,
+                     n_classes=5,
+                     shuffle_rng=None,
+                     hsv=None):
+    if shuffle_rng is not None:
+        images = flatten_imgs(load_images(0, n_train + n_validation + n_test, file_path_images, file_prefix_images, hsv))
+        labels = load_labeling_data(filename_labels,
+                                    0,  n_train + n_validation + n_test,
+                                    label_mask,
+                                    n_direction_sensors,
+                                    n_classes)
+        data = shuffle_data((images, labels), shuffle_rng)
+        training_data = (data[0][:n_train], data[1][:n_train])
+        validation_data = (data[0][n_train: n_train + n_validation], data[1][n_train: n_train + n_validation])
+        test_data = (data[0][n_train + n_validation:], data[1][n_train + n_validation:])
 
-    training_labels = load_labeling_data(filename_labels, 0, n_train, label_mask)
-    validation_labels = load_labeling_data(filename_labels, n_train, n_train + n_validation, label_mask)
-    test_labels = load_labeling_data(filename_labels, n_train + n_validation, n_train + n_validation + n_test,
-                                     label_mask)
+    else:
+        training_images = flatten_imgs(load_images(0, n_train, file_path_images, file_prefix_images, hsv))
+        validation_images = flatten_imgs(
+            load_images(n_train, n_train + n_validation, file_path_images, file_prefix_images, hsv))
+        test_images = flatten_imgs(
+            load_images(n_train + n_validation, n_train + n_validation + n_test, file_path_images, file_prefix_images, hsv))
 
-    training_data = (training_images, training_labels)
-    validation_data = (validation_images, validation_labels)
-    test_data = (test_images, test_labels)
+        training_labels = load_labeling_data(filename_labels,
+                                             0, n_train,
+                                             label_mask,
+                                             n_direction_sensors,
+                                             n_classes)
+        validation_labels = load_labeling_data(filename_labels,
+                                               n_train, n_train + n_validation,
+                                               label_mask,
+                                               n_direction_sensors,
+                                               n_classes)
+        test_labels = load_labeling_data(filename_labels,
+                                         n_train + n_validation, n_train + n_validation + n_test,
+                                         label_mask,
+                                         n_direction_sensors,
+                                         n_classes)
+
+        training_data = (training_images, training_labels)
+        validation_data = (validation_images, validation_labels)
+        test_data = (test_images, test_labels)
+
+    # if shuffle_rng is not None:
+    #     training_data = shuffle_data(training_data, shuffle_rng)
+    #     validation_data = shuffle_data(validation_data, shuffle_rng)
+    #     test_data = shuffle_data(test_data, shuffle_rng)
 
     def shared(data):
         """Place the data into shared variables.  This allows Theano to copy
@@ -145,6 +190,28 @@ def RMSProp(cost, params, lr=0.001, rho=0.9, epsilon=1e-6, step_rate=1.0):
         g = step_rate * g / gradient_scaling
         updates.append((acc, acc_new))
         updates.append((p, p - lr * g))
+    return updates
+
+
+def Adam(cost, params, lr=0.0002, b1=0.1, b2=0.001, e=1e-8):
+    updates = []
+    grads = T.grad(cost, params)
+    i = theano.shared(0.)
+    i_t = i + 1.
+    fix1 = 1. - (1. - b1)**i_t
+    fix2 = 1. - (1. - b2)**i_t
+    lr_t = lr * (T.sqrt(fix2) / fix1)
+    for p, g in zip(params, grads):
+        m = theano.shared(p.get_value() * 0.)
+        v = theano.shared(p.get_value() * 0.)
+        m_t = (b1 * g) + ((1. - b1) * m)
+        v_t = (b2 * T.sqr(g)) + ((1. - b2) * v)
+        g_t = m_t / (T.sqrt(v_t) + e)
+        p_t = p - (lr_t * g_t)
+        updates.append((m, m_t))
+        updates.append((v, v_t))
+        updates.append((p, p_t))
+    updates.append((i, i_t))
     return updates
 
 
@@ -218,7 +285,7 @@ class Network(object):
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
             validation_data, test_data, best_file_name=None, lmbda=0.0, learning_curve_file_name=None,
-            rmsprop=None):
+            rmsprop=None, adam=None):
         """Train the network using mini-batch stochastic gradient descent."""
         training_x, training_y = training_data
         validation_x, validation_y = validation_data
@@ -234,12 +301,21 @@ class Network(object):
         cost = self.layers[-1].cost(self) + \
                0.5 * lmbda * l2_norm_squared / num_training_batches
         grads = T.grad(cost, self.params)
+
+        assert rmsprop is None or adam is None
+
         if rmsprop is not None:
             updates = RMSProp(cost, self.params,
                               lr=rmsprop[0],
                               rho=rmsprop[1],
                               epsilon=rmsprop[2],
                               step_rate=rmsprop[3])
+        elif adam is not None:
+            updates = Adam(cost, self.params,
+                           lr=adam[0],
+                           b1=adam[1],
+                           b2=adam[2],
+                           e=adam[3])
         else:
             updates = [(param, param - eta * grad)
                    for param, grad in zip(self.params, grads)]
