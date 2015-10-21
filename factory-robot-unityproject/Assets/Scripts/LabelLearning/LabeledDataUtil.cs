@@ -82,10 +82,11 @@ public static class LabeledDataUtil {
 				} else {
 					//uncompressedSignals[index, x] = 1.0f;
 					
-					log += Mathf.RoundToInt(closestHit.distance) + ";";
+//					log += Mathf.RoundToInt(closestHit.distance) + ";";
+//					closestHit.distance
 					
 					if (!closestHit.transform.tag.Equals(wallTag)) {
-						signals[index * nDirectionSensors + (x / pixelsPerDirectionSensor)] += pixelContribution;
+						signals[index * nDirectionSensors + (x / pixelsPerDirectionSensor)] += pixelContribution / Mathf.Max(1.0f, 0.4f*closestHit.distance);
 						//Debug.DrawRay(ray.origin, 20.0f * ray.direction, Color.black, 10.0f, true);
 					} 
 				}              
