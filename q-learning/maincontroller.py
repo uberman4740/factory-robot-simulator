@@ -22,6 +22,8 @@ from expstoreprint import export_exp_store
 import pyqtlivecharting
 import sys
 
+from qualitycontrol import QualityLogger
+
 
 # import livebarchart
 
@@ -48,7 +50,8 @@ class MainController(object):
                  training_error_smoothing=0.0,
                  log_path=None,
                  log_write_period=1000,
-                 reward_smoothing=0.0):
+                 reward_smoothing=0.0,
+                 quality_logger=None):
         self.frame_counter = 0
         self.total_steps = 0
         self.frame_counter_increment = frame_counter_increment
@@ -83,6 +86,7 @@ class MainController(object):
         self.rewards_log = []
         self.smooth_reward = 0.0
         self.reward_smoothing = reward_smoothing
+        self.quality_logger = quality_logger
 
     def do(self):
         """Check for data receipt and send decisions to remote host. """
@@ -133,6 +137,7 @@ class MainController(object):
                                                                             self.current_decision))
             self.send_decision(self.current_decision)
             self.current_state = MainController.LEARN
+            self.quality_control()
 
         if self.current_state == MainController.LEARN:
             if self.total_steps > self.burn_in:
@@ -154,6 +159,12 @@ class MainController(object):
                 if (self.total_steps % self.log_write_period) == 0:
                     self.q_learner.q_function.save_as_file(self.log_path + 'q_function')
             self.current_state = MainController.RECEIVE
+
+    def quality_control(self):
+        self.quality_logger.set_value(self.current_total_reward, self.total_steps)
+        sigma = self.quality_logger.get_sigma()
+        if sigma is not None:
+            print 'sigma: {0}'.format(sigma)
 
     def remember_percept(self, percept, last_action, previous_reward):
         """Encode raw percept and pass encoding, last action and reward to Q-Learner."""
@@ -289,6 +300,9 @@ def main():
 
     log_path = ps.LOG_PATH + time.strftime('%Y-%m-%d_%H-%M-%S') + '/'
     copy_parameter_file(log_path)
+
+    # quality_logger = QualityLogger(ps.QUALITY_LOG_PATH)
+
     main_controller = MainController(q_learner,
                                      sensor_decoder=sensor_decoder,
                                      state_encoder_fn=state_encoder_fn,
@@ -306,7 +320,10 @@ def main():
                                      prng=prng,
                                      training_error_smoothing=ps.TRAIN_ERROR_SMOOTHING,
                                      log_path=log_path,
-                                     reward_smoothing=ps.REWARD_SMOOTHING)
+                                     reward_smoothing=ps.REWARD_SMOOTHING,
+                                     quality_logger=QualityLogger(ps.QUALITY_LOG_PATH))
+
+
     print 'Starting main loop.'
     while 1:
         main_controller.do()
@@ -317,6 +334,7 @@ if __name__ == '__main__':
     error_charting = None
     encoding_charting = None
     smooth_reward_charting = None
+
 
     anim_thread = threading.Thread(target=main)
     anim_thread.daemon = True
@@ -331,20 +349,20 @@ if __name__ == '__main__':
                                                steps=300,
                                                title='Q-values',
                                                ylabel='q-value')
-    error_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
-                                                   y_min=0,
-                                                   y_max=2.0,
-                                                   curve_width=2,
-                                                   steps=600,
-                                                   title='Training error',
-                                                   ylabel='mean error')
-    encoding_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
-                                                   y_min=0,
-                                                   y_max=1.0,
-                                                   curve_width=5,
-                                                   steps=5,
-                                                   title='Encoding',
-                                                   ylabel='signal')
+    # error_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
+    #                                                y_min=0,
+    #                                                y_max=2.0,
+    #                                                curve_width=2,
+    #                                                steps=600,
+    #                                                title='Training error',
+    #                                                ylabel='mean error')
+    # encoding_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
+    #                                                y_min=0,
+    #                                                y_max=1.0,
+    #                                                curve_width=5,
+    #                                                steps=5,
+    #                                                title='Encoding',
+    #                                                ylabel='signal')
     smooth_reward_charting = pyqtlivecharting.LiveChartingLines(n_curves=1,
                                                                 y_min=-1.0,
                                                                 y_max=1.0,

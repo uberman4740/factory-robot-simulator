@@ -36,6 +36,7 @@ RANDOM_ACTION_DURATION = 20
 
 Q_HIDDEN_NEURONS = 200
 
+QUALITY_LOG_PATH = 'quality-log.pickle'
 
 # --- Communication protocol settings ---
 FRAME_COUNTER_POS = 0
