@@ -26,7 +26,7 @@ TrainingData/
 # IPython notebook checkpoint files
 .ipynb_checkpoints
 
-# IPython binary
+# Python binary
 *.pyc
 
 exp0*/
@@ -35,7 +35,11 @@ network3.py
 Trash/
 *.save
 
-videos/
+*.mp4
+*.png
+*.pickle
+*.h5
+*.dat
 
 # Logs and reports
 *.lcurve
@@ -47,6 +51,13 @@ plots/
 **/pickled*
 **/exp-store-logs/*
 **/training-logs/*
+**/trained-networks/*
 
 # IDE files
 .idea/
+
+# Latex
+doc/**/*.aux
+doc/**/*.log
+doc/**/*.synctex.gz
+doc/**/*.pdf
