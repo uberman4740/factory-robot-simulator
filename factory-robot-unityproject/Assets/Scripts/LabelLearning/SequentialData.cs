@@ -2,6 +2,8 @@
 using System.Collections;
 
 public class SequentialData : MonoBehaviour {
+	public bool storeImages = true;
+
 	public RenderTexture cameraRenderTexture;
 	private Texture2D readerTexture;
 	public Camera agentCamera;
@@ -18,7 +20,8 @@ public class SequentialData : MonoBehaviour {
 	public string wallTag = "Building";
 
 	public AgentRandomControl agentRandomControl;
-
+//	public PeriodicResetter periodicResetter;
+	
 	int counter = 0;
 
 	void Start () {
@@ -43,7 +46,8 @@ public class SequentialData : MonoBehaviour {
 		                        nDirectionSensors,
 		                        wallTag,
 		                        counter,
-		                        wallHitMultiplier: 0.4f);	
+		                        wallHitMultiplier: 0.4f,
+		                        storeImages: storeImages);	
 
 		if (agentRandomControl != null) {
 			FileUtils.AppendStringToFile(trainingFilePath + actionFileName, agentRandomControl.currentAction.ToString() + '\n');
@@ -53,6 +57,8 @@ public class SequentialData : MonoBehaviour {
 		if (counter % 1000 == 0) {
 			Debug.LogFormat("counter: {0}", counter);
 		}
-
+//		if (periodicResetter.HasBeenReset()) {
+//			Debug.Log ("Reset!");
+//		}
 	}
 }

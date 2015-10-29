@@ -14,9 +14,9 @@ public static class LabeledDataUtil {
 	                            int nDirectionSensors,
 	                            string wallTag,
 	                            int counter,
-	                            float wallHitMultiplier) {
+	                            float wallHitMultiplier,
+	                            bool storeImages) {
 
-        agentCamera.Render();
 
         float[] sensorData = GetSensorInfo(agentCamera,
 		                                   recordCategoryTags,
@@ -31,15 +31,18 @@ public static class LabeledDataUtil {
         }
         //Debug.Log(labelVector);
 
-        Color32[] currentImage = MiscUtils.getCurrentCameraImage(cameraRenderTexture, readerTexture);
+		if (storeImages) {
+			agentCamera.Render();
+        	Color32[] currentImage = MiscUtils.getCurrentCameraImage(cameraRenderTexture, readerTexture);
 
-        int downsampleFactor = 2;
-        currentImage = MathUtils.downSampleImg(currentImage, downsampleFactor);
+	        int downsampleFactor = 2;
+	        currentImage = MathUtils.downSampleImg(currentImage, downsampleFactor);
 
-        Texture2D tex = new Texture2D(cameraRenderTexture.width / downsampleFactor, cameraRenderTexture.height / downsampleFactor);
-        tex.SetPixels32(currentImage);
+	        Texture2D tex = new Texture2D(cameraRenderTexture.width / downsampleFactor, cameraRenderTexture.height / downsampleFactor);
+	        tex.SetPixels32(currentImage);
 
-        FileUtils.SaveTextureToFile(tex, trainingFilePath + captureFilePrefix + counter.ToString("D6") + ".png");
+			FileUtils.SaveTextureToFile(tex, trainingFilePath + captureFilePrefix + counter.ToString("D6") + ".png");
+		}
 
         string trainingLine = labelVector + "\n";
         FileUtils.AppendStringToFile(trainingFilePath + labelFileName, trainingLine);
@@ -86,7 +89,8 @@ public static class LabeledDataUtil {
 //					closestHit.distance
 					
 					if (!closestHit.transform.tag.Equals(wallTag)) {
-						signals[index * nDirectionSensors + (x / pixelsPerDirectionSensor)] += pixelContribution / Mathf.Max(1.0f, 0.4f*closestHit.distance);
+						signals[index * nDirectionSensors + (x / pixelsPerDirectionSensor)] += 
+							pixelContribution / Mathf.Sqrt(Mathf.Max(1.0f, 1.5f*closestHit.distance));
 						//Debug.DrawRay(ray.origin, 20.0f * ray.direction, Color.black, 10.0f, true);
 					} 
 				}              

@@ -65,7 +65,8 @@ public class LabeledDataCreator : MonoBehaviour {
 				                         nDirectionSensors,
 				                         wallTag,
 				                         counter,
-				                         wallHitMultiplier: 0.4f);
+				                         wallHitMultiplier: 0.4f,
+				                    	 storeImages: true);
 				counter++;
 				
 				if (counter % 1000 == 0) {
