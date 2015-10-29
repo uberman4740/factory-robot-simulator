@@ -28,7 +28,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 135356}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.69000006, y: 0, z: -11.2399998}
+  m_LocalPosition: {x: -18.2900009, y: 0, z: -8.80000019}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -121,7 +121,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   collisionReward: 5
   respawnOnCollide: 1
-  respawnRangeCenter: {x: 0, y: 0, z: 0}
+  repel: 0
+  respawnRangeCenter: {x: 9999, y: 9999, z: 99999}
   respawnRange: {x: 32, y: 0, z: 32}
 --- !u!1001 &100100000
 Prefab:

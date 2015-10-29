@@ -95,6 +95,7 @@ GameObject:
   - 4: {fileID: 66365003}
   - 114: {fileID: 66365004}
   - 114: {fileID: 66365005}
+  - 114: {fileID: 66365006}
   m_Layer: 0
   m_Name: LabeledDataCreator
   m_TagString: Untagged
@@ -120,7 +121,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 66365002}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6e1486dbded852a4393cc8535041b20a, type: 3}
   m_Name: 
@@ -156,23 +157,64 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 66365002}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 26b26b9bc6be74f76bc6cc15b7ad61cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  storeImages: 1
   cameraRenderTexture: {fileID: 8400000, guid: 3146b30679e0fb34b9642334f7a63725, type: 2}
   agentCamera: {fileID: 1085772763}
   recordCategoryTags:
   - Pickup
   - Building
-  trainingFilePath: /Users/an/dev-repos/factory-robot-data/imgs_2015-10-18/
+  trainingFilePath: /Users/an/dev-repos/factory-robot-data/imgs_2015-10-26/
   labelFileName: labels.dat
   captureFilePrefix: capture
   actionFileName: actions.dat
   nDirectionSensors: 9
   wallTag: Building
   agentRandomControl: {fileID: 964196322}
+--- !u!114 &66365006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 66365002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a634d9a9160bf4b388bdd57d0cdc7c87, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  resetPeriod: 500
+  objects:
+  - {fileID: 278693107}
+  - {fileID: 823034541}
+  - {fileID: 1559720230}
+  - {fileID: 375119459}
+  - {fileID: 1323347231}
+  - {fileID: 964196316}
+  directionRange:
+  - {x: 0, y: 360}
+  - {x: 0, y: 360}
+  - {x: 0, y: 360}
+  - {x: 0, y: 360}
+  - {x: 0, y: 360}
+  - {x: 0, y: 0}
+  positionRangeMin:
+  - {x: -18, y: -7}
+  - {x: -18, y: -7}
+  - {x: -18, y: -7}
+  - {x: -18, y: -7}
+  - {x: -18, y: -7}
+  - {x: 0, y: -8}
+  positionRangeMax:
+  - {x: 18, y: 18}
+  - {x: 18, y: 18}
+  - {x: 18, y: 18}
+  - {x: 18, y: 18}
+  - {x: 18, y: 18}
+  - {x: 0, y: -8}
 --- !u!1 &66876261
 GameObject:
   m_ObjectHideFlags: 0
@@ -1441,7 +1483,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 14.9712648
+      value: 11.8199997
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.y
@@ -1624,7 +1666,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -4.36000013
+      value: -6.26999998
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.y
@@ -1632,7 +1674,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.z
-      value: -.925380349
+      value: -7.26000023
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalRotation.x
@@ -1827,7 +1869,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 964196315}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38aabd531d1544b6b9e969530efdc330, type: 3}
   m_Name: 
@@ -2339,7 +2381,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 4.57905579
+      value: .730000019
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.y
@@ -2686,7 +2728,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 10.4099998
+      value: 7.6500001
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.y
@@ -3623,7 +3665,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -4.36000013
+      value: -18.2900009
       objectReference: {fileID: 0}
     - target: {fileID: 429858, guid: 26dccd3f3d2da084dad33dec657eb7ae, type: 2}
       propertyPath: m_LocalPosition.y
