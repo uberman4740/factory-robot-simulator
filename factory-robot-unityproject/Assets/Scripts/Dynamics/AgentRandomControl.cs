@@ -11,10 +11,16 @@ public class AgentRandomControl : MonoBehaviour {
 
 	public int currentAction;
 
+	public int[] actions;
+
 	private int nextActionSwitchFrame;
 	private int totalFrames;
+	
 
 	void Start() {
+		if (actions.Length == 0) {
+			Debug.LogWarning("No actions specified!");
+		}
 		nextActionSwitchFrame = 0;
 	}
 
@@ -24,7 +30,7 @@ public class AgentRandomControl : MonoBehaviour {
 			nextActionSwitchFrame += Random.Range(actionDurationLower, 
 			                                      actionDurationUpper);
 
-			currentAction = Random.Range(0, 3);
+			currentAction = actions[Random.Range(0, actions.Length)];
 		}
 
 		switch (currentAction) {
