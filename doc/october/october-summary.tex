@@ -1,0 +1,138 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\begin{document}
+\title{Reinforcement Learning in Simulated Continuous 3D Environments}
+\date{}
+
+\maketitle
+
+% \begin{abstract}
+
+% \end{abstract}
+
+\section{Motivation}
+
+Motivation for automation?
+Economic aspects (efficiency),
+Safety
+
+The development of systems that can automatically find beneficial strategies in a large variety of continuous environments, based only on a high-dimensional raw stream of sensor input, is one of the most challenging goals of artificial intelligence research.
+Reinforcement Learning (RL) is a general framework in which this goal can be pursued. 
+
+Recent progress in RL.
+
+3D simulations offer an inexpensive way of prototyping and evaluating autonomous systems.
+We chose the game engine Unity \cite{?} as our simulation platform because it allows for an intuitive workflow and offers high quality real-time rendering.
+
+
+
+\paragraph{Long-term goals.}
+In principle, realistic 3D-renderings could be used as a way to train vision systems which are meant to be used in practice.
+We have not yet investigated whether this approach is feasible. 
+One necessary condition is obviously that the simulated environment is built such that it visually matches the real-life target environment as closely as possible.
+ 
+Another goal is to implement statistical control mechanisms:
+Even though many machine learning systems are essentially ``black boxes'' and do not offer much direct insight into their reasoning process, there is no limit to the number of safety monitors built into each autonomous agent. 
+These safety mechanisms can then be evaluated in the simulated environment in arbitrarily hostile conditions.
+
+This paper is organized as follows.
+[to do]
+
+\section{Related Work}
+
+Most of the techniques we adopted in this paper are well-established in the literature.
+
+Deepmind: Atari paper.
+Deep-Q-Learning: real-time control based on pixel values. 
+CNN for Q-function approximation. 
+Experience replay.
+Wide variety of tasks with same architecture and hyperparameter settings.
+No 3D, instead simple 2D game graphics.
+
+
+Continuous Control paper.
+agent-critic.
+
+\section{Implementation}
+
+\subsection{Setup}
+%Unity is used as the simulation and rendering engine. 
+The simulation of the physical environment is performed entirely by the Unity engine.
+It updates the state of the world according to the specified system dynamics, checks for collisions and computes the signals of virtual sensors, such as cameras.
+Sensor signals are sent to a dedicated process which we will call the \emph{controller}.
+The controller evaluates these signals and responds with the chosen action.
+We implemented a simple error-checking network protocol on top of UDP to handle the inter-process communication.
+
+
+\paragraph{Time steps.}
+In its default behavior, the 3D engine only advances the world state by fixed time steps. % time step length?
+Moreover, these time steps are only executed when the controller's response to the previous time step has been received.
+It could be argued that this synchronization of controller and simulator conceals many difficulties of real autonomous systems, such as sensor latencies or communication noise.
+However, these effects can still be simulated, leading to more transparency, reproducibility and experimental insight.
+
+\paragraph{Sensor types.}
+Factory Robot Domain:
+\begin{enumerate}
+\item Camera mounted on a vehicle. $64\mathrm{x}64$ 24-bit-RGB signal, $30$ frames per second. 
+\end{enumerate}
+
+%\subsection{Factory Robot Domain}
+
+
+\subsection{Dimensionality Reduction}
+%Since the $64\mathrm{x}64$ color image consists of $12288$ floating point values, t
+The camera on the robot delivers more than $10^4$ floating point numbers per frame, which means that the raw signal would be a very high-dimensional input for the autonomous learner.
+It is therefore natural to look for ways to transform the camera image to a lower dimensional feature space while at the same time preserving the essential pieces of information about the state of the environment.
+
+
+
+\paragraph{Supervised Pretraining.}
+In order to produce high-density low dimensional feature vectors from the raw camera input, we created labeled training examples, i.e. pairs of an image and its target feature vector.
+The format of the feature vector was manually designed: we divided the camera's field of vision into five vertical slices, each taking up the same visual angle.
+For every relevant object in the environment, there are five elements in the feature vector, describing whether the object is present in the respective vertical slice.
+Large numbers of training examples with random choices and positions of objects can be conveniently created automatically with this method.
+
+We trained a Convolutional Neural Network \cite{?} implemented in Theano \cite{?} to approximate our labeling function. 
+$50000$ training examples were used.
+% In the Factory Robot domain, the agent's movement is limited to a plane. 
+
+Real applicability: more realistic rendering required, then learning from rendered 3D-objects for custom-tailored image recognizers might be feasible and desirable \cite{??}.
+
+Additionally to the supervised pre-training, unsupervised pre-training with autoencoders and Principal Component Analysis has been tried. 
+However, using these methods of dimensionality reduction, the Q-Learner subsequently performed poorer than with the supervised training.
+
+\subsection{Q-Learning}
+
+Experience buffer.
+
+Every observation is composed of multiple consecutive frames.
+
+\section{Results}
+
+
+\section{Future Work}
+
+Learning of dynamic model to combine representation learning and planning.
+
+Objective: solutions for known problems associated with Reinforcement Learning:
+
+\begin{itemize}
+\item 
+Temporal credit assignment problem: reward much later than beneficial action.
+
+\item
+Partial observability: only a small part of the state can be directly observed at any given moment.
+More information about the state is usually implicitly available:
+e.g. momentum data can be extracted from analyzing the differences of the object's positions at different times. However, the movement of the camera must also be taken into account.
+
+\end{itemize}
+
+
+
+
+
+\end{document}

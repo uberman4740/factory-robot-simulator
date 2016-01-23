@@ -1,0 +1,58 @@
+
+
+Themen:
+-------
+
+Deep Learning Überblick
+
+   Erfolge
+
+   Grundlegende Prinzipien
+
+
+Statistisches Lernen
+
+    Curse of dimensionality
+
+    Fitting, overfitting
+
+
+Reinforcement Learning
+
+    Überblick
+
+
+
+Zitate:
+-------
+Deep learning has become the dominant method for acoustic modeling in speech recognition, and is quickly becoming the dominant method for several vision tasks such as object recognition, object detection, and semantic segmentation.
+The next frontier for deep learning are language understanding, video, and control/planning (e.g. for robotics or dialog systems).
+Integrating deep learning (or representation learning) with reasoning and making unsupervised learning actually work are two big challenges for the next several years.
+(Yann LeCun)
+
+
+Antworten:
+----------
+
+Q: Verifizierbarkeit? Kann bewiesen werden, dass das richtige gemacht wird.
+
+A:
+  1. Ansätze, NNs transparent zu machen
+  2. Keine 100%ige Kontrolle. NNs ähnliche black-boxes wie Menschen.
+     Jedoch: Fehlerquote kann prinzipiell beliebig verkleinert werden.
+  3. Beispielsituationen für Blackboxes:
+     Für das Bilderkennungsprogramm kann nicht sichergestellt werden, dass es immer korrekt antwortet.
+     Tatsächlich kann sogar gezeigt werden, dass es NICHT in 100% der Fälle korrekt entscheidet.
+     Das ist aber nicht unbedingt die "Schuld" des Neuronalen Netzes - es liegt in der Natur der Aufgabe
+
+     Selbstfahrende Autos: "Fehler": Mensch kommt zu Schaden. Diese Art von Fehler kann durch kein System
+     ausgeschlossen werden - egal ob NN oder nicht. Aber wahrscheinlich kann die Aufgabe durch den Einsatz statistischer
+     Lernverfahren deutlich besser gelöst werden (auch wenn das Verhalten nicht vollständig maschinell gelernt wurde,
+      und viel Domainwissen von Experten dazu kommt).
+
+     Folgerung: Bei bestimmten Aufgaben können wir prinzipiell keine "Korrektheit" erzwingen - teilweise noch nicht mal
+     definieren! Diese Aufgaben sind anspruchsvoll und werden heutzutage oft von Menschen erledigt - bei denen wir
+     aber auch erwiesenermaßen keine Fehlerlosigkeit haben.
+     Wenn wir auf die Ideologie beharren, dass Maschinen nur zum Einsatz kommen sollen, wenn wir ihre Korrektheit
+     verifizieren können, dann werden bestimmte Aufgaben niemals automatisiert werden (und stattdessen tw. von ebenso
+     fehlbaren Menschen erledigt)

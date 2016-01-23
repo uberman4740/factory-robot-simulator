@@ -1,0 +1,120 @@
+The development of systems that can automatically find beneficial strategies in a large variety of continuous environments, based only on a high-dimensional raw stream of sensor input, is one of the most challenging goals of artificial intelligence research.
+Reinforcement Learning (RL) is a general framework in which this goal can be pursued.
+
+
+Deep Learning:
+ - multiple layers of stacked transformations
+ - powerful representations of data
+ - recent successes in Image recognition, audio processing, ?
+
+Reinforcement learning: mention Deep Mind paper
+  -> applied ideas of DRL to 3D environment (with supervised pre-training)
+
+- Physically plausible 3D simulation of environments.
+
+-----------------------
+
+
+Titel:
+------
+Deep Reinforcement Learning in simulierten 3D-Umgebungen
+
+
+Abstract:
+---------
+Beim Deep Learning werden hochdimensionale Eingabedaten in kompakte Repräsentationen transformiert. Diese
+Transformationen werden automatisch durch das Training mit großen Mengen an Daten gefunden. Die großen Erfolge von Deep
+Learning in den vergangenen Jahren, beispielsweise in den Bereichen der Bild- und Spracherkennung, zeigen, dass diese
+Repräsentationen in vielen Fällen mächtiger sind als Feature-Erkenner, die von Experten entworfen werden.
+In diesem Vortrag soll die Anwendung von Deep-Learning- und Reinforcement-Learning-Techniken auf die automatische
+Steuerung von Robotern basierend auf visuellem Sensorinput vorgestellt werden. Es wird darauf eingegangen, wie mit einem
+3D-Simulator Trainingsdaten generiert und die verschiedenen Architekturen ausgewertet wurden. Außerdem werden vorläufige
+experimentelle Resultate aus einem Beispielszenario präsentiert.
+
+
+
+
+Beim Deep Learning werden hochdimensionale Eingabedaten in kompakte Repräsentationen transformiert.
+Diese Transformationen werden automatisch durch das Training mit großen Mengen an Daten gefunden.
+Die großen Erfolge von Deep Learning in den vergangenen Jahren, beispielsweise in den Bereichen der Bild- und Spracherkennung, zeigen, dass diese Repräsentationen in vielen Fällen mächtiger sind als [Feature-Extraktoren] Merkmalsextrahierer, die von Experten entworfen werden.
+In diesem Vortrag soll die Anwendung von Deep-Learning- und Reinforcement-Learning-Techniken auf die automatische Steuerung von Robotern vorgestellt werden.
+Es wird darauf eingegangen, wie mit einem 3D-Simulator Trainingsdaten generiert und die verschiedenen Architekturen ausgewertet wurden.
+Außerdem werden vorläufige experimentelle Resultate präsentiert.
+
+
+
+
+
+
+
+
+Der große Erfolg von Deep-Learning-Techniken
+zeigt, dass in vielen Fällen das automatische, maschinelle Lernen von abstrakten Repräsentationen des hochdimensionalen Inputs
+zeigt, dass in vielen Fällen der hochdimensionale Input durch maschinelles Lernen in mächtigere Repräsentationen transformiert werden kann,
+als durch von Experten entworfene Merkmal
+
+[Durch den Einsatz von Deep Learning kann hochdimensionaler Input automatisch in kompakte Repräsentationen transformiert werden.]
+Beim von Deep Learning werden hochdimensionale Eingabedaten in kompakte Repräsentationen transformiert.
+Diese Transformationen werden automatisch durch das Training mit großen Mengen an Daten gefunden.
+[Dies bedarf einer großen Menge von Trainingsdaten.]
+Die großen Erfolge von Deep Learning in den vergangenen Jahren,
+beispielsweise in den Bereichen der Bild- und Spracherkennung,
+zeigen, dass diese Repräsentationen in vielen Fällen mächtiger sind als Feature-Extraktoren, die von Experten entworfen werden.
+In diesem Vortrag soll die Anwendung von Deep-Learning- und Reinforcement-Learning-Techniken auf die automatische Steuerung von Robotern vorgestellt werden.
+Es wird darauf eingegangen, wie mit einem 3D-Simulator Trainingsdaten generiert und die verschiedenen Architekturen ausgewertet wurden.
+Außerdem werden vorläufige experimentelle Resultate präsentiert.
+
+
+
+
+
+
+auf die Generierung von Trainingsdaten und Auswertung der Architekturen mit einem 3D-Simulator eingegangen.
+
+Vorläufige Resultate
+
+
+Zur Generierung der Daten und
+
+In diesem Vortrag soll vorgestellt werden,
+wie Deep-Learning-Techniken [<- ?] in simulierten 3D-Szenarien angewendet we
+
+
+
+
+basierend auf großen Mengen von Trainingsdaten
+
+ Repräsentationen hochdimensionaler Daten
+
+Deep-Learning-Techniken
+
+
+Deep Learning beschreibt die automatische
+
+
+Der Inhalt des Vortrags ist ...
+
+Die erfolgreiche Anwendung von Deep-Learning-Techniken in Bereichen wie Bild- oder Spracherkennung
+
+Hochdimensionale Sensorsignale durch Deep-Learning-Techniken in [mächtige] Repräsentation transformieren.
+
+Automatisches Lernen einer Transformation hochdimensionaler Sensordaten. niedrigdimensionalen Repräsentation
+
+Zwei Schritte: Überwachtes Lernen einer niedrigdimensionalen, mächtigen Repräsentation des Kamerabildes.
+Basierend auf dem transformierten Sensorsignal wird Reinforcement-Learning angewendet, um in der
+physikalischen Umgebung gute Strategien zu finden.
+
+
+3D-Simulator dient der Generierung
+
+
+Die Deep Learning
+
+
+
+kontinuierliche Zustandsräume
+
+CNNs
+
+Physikalisch plausible 3D-Simulation der [Welt].
+
