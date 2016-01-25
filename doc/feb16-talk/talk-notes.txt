@@ -3,13 +3,6 @@
 Themen:
 -------
 
-Deep Learning Überblick
-
-   Erfolge
-
-   Grundlegende Prinzipien
-
-
 Statistisches Lernen
 
     Curse of dimensionality
@@ -17,10 +10,32 @@ Statistisches Lernen
     Fitting, overfitting
 
 
+Deep Learning Überblick
+
+   Erfolge
+
+   Grundlegende Prinzipien
+
+   Schwierigkeiten - Vanishing Gradient
+    Grund dafür, dass Erfolge so spät kamen:
+      Algorithmische Verfeinerungen (ReLu, AdaGrad, ...),
+      mehr Rechenleistung,
+      mehr Daten
+
+
+
 Reinforcement Learning
 
     Überblick
 
+
+...
+
+Ausblick
+
+    Benutzung vortrainierter Modelle, die extrem schnell auf die Situation angepasst werden kann
+     (e.g. CNNs, die bereits "sehen" können - d.h. mächtige Repräsentationen für fotografische Abbildungen
+     dreidimensionaler Szenen gelernt haben).
 
 
 Zitate:
@@ -33,8 +48,17 @@ Integrating deep learning (or representation learning) with reasoning and making
 
 Antworten:
 ----------
+Q: Kameras vs. Lidar?
+A:
+  1. Wahrscheinlich beides. Oder kommt drauf an. Unterschiede sind:
+     Preis (Kamera deutlich billiger)
+     Auflösung (Kamera höher, zoom etc.)
+     Farberkennung (Kamera +) - Verkehrsschilder, Ampeln, ...
+     Tiefenerkennung (LIDAR erkennt Tiefe automatisch)
+     Reichweite (Tagsüber Kamera +)
+     Tageszeitunabhängigkeit (LIDAR +)
 
-Q: Verifizierbarkeit? Kann bewiesen werden, dass das richtige gemacht wird.
+Q: Verifizierbarkeit? Kann bewiesen werden, dass das richtige gemacht wird?
 
 A:
   1. Ansätze, NNs transparent zu machen
